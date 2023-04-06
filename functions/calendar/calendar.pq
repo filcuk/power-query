@@ -117,15 +117,15 @@ let CreateDateTable = (
 		Calendar445 = (WeekNo) => let 
 			Periods = 
 				{ 
-					{(x)=>x<5,  [P=1,Q=1]}, 
-					{(x)=>x<9,  [P=2,Q=1]}, 
-					{(x)=>x<14, [P=3,Q=1]}, 
-					{(x)=>x<18, [P=4,Q=2]}, 
-					{(x)=>x<22, [P=5,Q=2]}, 
-					{(x)=>x<27, [P=6,Q=2]}, 
-					{(x)=>x<31, [P=7,Q=3]}, 
-					{(x)=>x<35, [P=8,Q=3]}, 
-					{(x)=>x<40, [P=9,Q=3]}, 
+					{(x)=>x< 5, [P=1, Q=1]}, 
+					{(x)=>x< 9, [P=2, Q=1]}, 
+					{(x)=>x<14, [P=3, Q=1]}, 
+					{(x)=>x<18, [P=4, Q=2]}, 
+					{(x)=>x<22, [P=5, Q=2]}, 
+					{(x)=>x<27, [P=6, Q=2]}, 
+					{(x)=>x<31, [P=7, Q=3]}, 
+					{(x)=>x<35, [P=8, Q=3]}, 
+					{(x)=>x<40, [P=9, Q=3]}, 
 					{(x)=>x<44, [P=10,Q=4]}, 
 					{(x)=>x<48, [P=11,Q=4]}, 
 					{(x)=>true, [P=12,Q=4]} 
@@ -133,43 +133,43 @@ let CreateDateTable = (
 			Result = List.First(List.Select(Periods, each _{0}(WeekNo))){1}
 		in 
 			Result,
-		P1 = Table.ExpandRecordColumn(Table.AddColumn(I0, "Calendar445", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P","Q" }, {"Period 4-4-5 #", "Quarter 4-4-5 #"}),
+		P1 = Table.ExpandRecordColumn(Table.AddColumn(I0, "Calendar445", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P", "Q"}, {"Period 4-4-5 #", "Quarter 4-4-5 #"}),
 
 		/* Bool relative */
-		L01 = Table.AddColumn(P1,  "Is in W-0", each Date.IsInCurrentWeek([Date]), type binary),
-		L02 = Table.AddColumn(L01, "Is in W-1", each Date.IsInPreviousWeek([Date]), type binary),
-		L03 = Table.AddColumn(L02, "Is in W-2", each Date.IsInPreviousNWeeks([Date], 2) and not Date.IsInPreviousNWeeks([Date], 1), type binary),
+		L01 = Table.AddColumn(P1,  "Is in W-0", each Date.IsInCurrentWeek([Date]), type logical),
+		L02 = Table.AddColumn(L01, "Is in W-1", each Date.IsInPreviousWeek([Date]), type logical),
+		L03 = Table.AddColumn(L02, "Is in W-2", each Date.IsInPreviousNWeeks([Date], 2) and not Date.IsInPreviousNWeeks([Date], 1), type logical),
 
-		L04 = Table.AddColumn(L03, "Is in M-0", each Date.IsInCurrentMonth([Date]), type binary),
-		L05 = Table.AddColumn(L04, "Is in M-1", each Date.IsInPreviousMonth([Date]), type binary),
-		L06 = Table.AddColumn(L05, "Is in M-2", each Date.IsInPreviousNMonths([Date], 2) and not Date.IsInPreviousNMonths([Date], 1), type binary),
+		L04 = Table.AddColumn(L03, "Is in M-0", each Date.IsInCurrentMonth([Date]), type logical),
+		L05 = Table.AddColumn(L04, "Is in M-1", each Date.IsInPreviousMonth([Date]), type logical),
+		L06 = Table.AddColumn(L05, "Is in M-2", each Date.IsInPreviousNMonths([Date], 2) and not Date.IsInPreviousNMonths([Date], 1), type logical),
 
-		L07 = Table.AddColumn(L06, "Is in Q-0", each Date.IsInCurrentQuarter([Date]), type binary),
-		L08 = Table.AddColumn(L07, "Is in Q-1", each Date.IsInPreviousQuarter([Date]), type binary),
-		L09 = Table.AddColumn(L08, "Is in Q-2", each Date.IsInPreviousNQuarters([Date], 2) and not Date.IsInPreviousNQuarters([Date], 1), type binary),
+		L07 = Table.AddColumn(L06, "Is in Q-0", each Date.IsInCurrentQuarter([Date]), type logical),
+		L08 = Table.AddColumn(L07, "Is in Q-1", each Date.IsInPreviousQuarter([Date]), type logical),
+		L09 = Table.AddColumn(L08, "Is in Q-2", each Date.IsInPreviousNQuarters([Date], 2) and not Date.IsInPreviousNQuarters([Date], 1), type logical),
 
-		L10 = Table.AddColumn(L09, "Is in Y-0", each Date.IsInCurrentYear([Date]), type binary),
-		L11 = Table.AddColumn(L10, "Is in Y-1", each Date.IsInPreviousYear([Date]), type binary),
-		L12 = Table.AddColumn(L11, "Is in Y-2", each Date.IsInPreviousNYears([Date], 2) and not Date.IsInPreviousNYears([Date], 1), type binary),
+		L10 = Table.AddColumn(L09, "Is in Y-0", each Date.IsInCurrentYear([Date]), type logical),
+		L11 = Table.AddColumn(L10, "Is in Y-1", each Date.IsInPreviousYear([Date]), type logical),
+		L12 = Table.AddColumn(L11, "Is in Y-2", each Date.IsInPreviousNYears([Date], 2) and not Date.IsInPreviousNYears([Date], 1), type logical),
 
 		/* Bool rolling */
-		L13 = Table.AddColumn(L12, "Is Rolling W-0", each Date.IsInPreviousNDays([Date], 7), type binary),
-		L14 = Table.AddColumn(L13, "Is Rolling W-1", each Date.IsInPreviousNDays([Date], 7 * 2) and not Date.IsInPreviousNDays([Date], 7), type binary),
+		L13 = Table.AddColumn(L12, "Is Rolling W-0", each Date.IsInPreviousNDays([Date], 7), type logical),
+		L14 = Table.AddColumn(L13, "Is Rolling W-1", each Date.IsInPreviousNDays([Date], 7 * 2) and not Date.IsInPreviousNDays([Date], 7), type logical),
 
-		L15 = Table.AddColumn(L14, "Is Rolling M-0", each Date.IsInPreviousNDays([Date], RollMonth), type binary),
-		L16 = Table.AddColumn(L15, "Is Rolling M-1", each Date.IsInPreviousNDays([Date], RollMonth * 2) and not Date.IsInPreviousNDays([Date], RollMonth), type binary),
+		L15 = Table.AddColumn(L14, "Is Rolling M-0", each Date.IsInPreviousNDays([Date], RollMonth), type logical),
+		L16 = Table.AddColumn(L15, "Is Rolling M-1", each Date.IsInPreviousNDays([Date], RollMonth * 2) and not Date.IsInPreviousNDays([Date], RollMonth), type logical),
 
-		L17 = Table.AddColumn(L16, "Is Rolling Q-0", each Date.IsInPreviousNDays([Date], RollQuarter), type binary),
-		L18 = Table.AddColumn(L17, "Is Rolling Q-1", each Date.IsInPreviousNDays([Date], RollQuarter * 2) and not Date.IsInPreviousNDays([Date], RollQuarter), type binary),
+		L17 = Table.AddColumn(L16, "Is Rolling Q-0", each Date.IsInPreviousNDays([Date], RollQuarter), type logical),
+		L18 = Table.AddColumn(L17, "Is Rolling Q-1", each Date.IsInPreviousNDays([Date], RollQuarter * 2) and not Date.IsInPreviousNDays([Date], RollQuarter), type logical),
 
-		L19 = Table.AddColumn(L18, "Is Rolling Y-0", each Date.IsInPreviousNDays([Date], RollYear), type binary),
-		L20 = Table.AddColumn(L19, "Is Rolling Y-1", each Date.IsInPreviousNDays([Date], RollYear * 2) and not Date.IsInPreviousNDays([Date], RollYear), type binary),
+		L19 = Table.AddColumn(L18, "Is Rolling Y-0", each Date.IsInPreviousNDays([Date], RollYear), type logical),
+		L20 = Table.AddColumn(L19, "Is Rolling Y-1", each Date.IsInPreviousNDays([Date], RollYear * 2) and not Date.IsInPreviousNDays([Date], RollYear), type logical),
 
 		/* Bool to date */
-		L21 = Table.AddColumn(L20, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type binary),
-		L22 = Table.AddColumn(L21, "Is to Date Month", each Date.IsInCurrentMonth([Date]) and [Date] <= Today, type binary),
-		L23 = Table.AddColumn(L22, "Is to Date Quarter", each Date.IsInCurrentQuarter([Date]) and [Date] <= Today, type binary),
-		L24 = Table.AddColumn(L23, "Is to Date Year", each Date.IsInCurrentYear([Date]) and [Date] <= Today, type binary)
+		L21 = Table.AddColumn(L20, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
+		L22 = Table.AddColumn(L21, "Is to Date Month", each Date.IsInCurrentMonth([Date]) and [Date] <= Today, type logical),
+		L23 = Table.AddColumn(L22, "Is to Date Quarter", each Date.IsInCurrentQuarter([Date]) and [Date] <= Today, type logical),
+		L24 = Table.AddColumn(L23, "Is to Date Year", each Date.IsInCurrentYear([Date]) and [Date] <= Today, type logical)
 	in
 		L24
 in
