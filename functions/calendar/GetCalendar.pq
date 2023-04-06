@@ -17,7 +17,7 @@
 | 		Apply standardised column naming
 \*********************************************************/
 
-let CreateDateTable = (
+let GetCalendar = (
 	StartDate as date,
 	EndDate as date,
 	optional LangTag as nullable text,
@@ -133,7 +133,7 @@ let CreateDateTable = (
 			Result = List.First(List.Select(Periods, each _{0}(WeekNo))){1}
 		in 
 			Result,
-		P1 = Table.ExpandRecordColumn(Table.AddColumn(I0, "Calendar445", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P", "Q"}, {"Period 4-4-5 #", "Quarter 4-4-5 #"}),
+		P1 = Table.ExpandRecordColumn(Table.AddColumn(I0, "Calendar445", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P", "Q"}, {"Period 445 #", "Period 445 Quarter #"}),
 
 		/* Bool relative */
 		L01 = Table.AddColumn(P1,  "Is in W-0", each Date.IsInCurrentWeek([Date]), type logical),
@@ -173,4 +173,4 @@ let CreateDateTable = (
 	in
 		L24
 in
-	CreateDateTable
+	GetCalendar
