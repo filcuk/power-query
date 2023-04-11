@@ -1,20 +1,26 @@
 /*********************************************************\
 | CALENDAR GENERATOR
-|=-------------------------------------------------------=|
-| Original 2014 by Matt Masson, mattmasson.com
-| Modified 2020 by Filip Kraus, filipkraus.net
-|=-------------------------------------------------------=|
+|
+|=--purpose----------------------------------------------=|
+| Generate a date table based on start and end dates.
+| 
+|=--notes------------------------------------------------=|
 | LangTag examples: en-US, en-GB
 | Column naming:
 |  	%	   date
 |  	#, ##	number, padded number (text)
 |  	Is ...	boolean
 | 	@M/L	text shortenned/full (Jan/January)
-|=-------------------------------------------------------=|
-| Changelog:
+| 
+|=--credits----------------------------------------------=|
+| Original 2014 by Matt Masson, mattmasson.com
+| Modified 2020 by Filip Kraus, filipkraus.net
+|
+|=--changelog--------------------------------------------=|
 | 	2023-04-06
 | 		Add financial, ISO, calendar 4-4-5
 | 		Apply standardised column naming
+| 
 \*********************************************************/
 
 let GetCalendar = (
