@@ -20,6 +20,8 @@
 | 	2023-04-06
 | 		Add financial, ISO, calendar 4-4-5
 | 		Apply standardised column naming
+|	2023-05-11
+|		Add 'Week @M'
 | 
 \*********************************************************/
 
@@ -61,12 +63,13 @@ let GetCalendar = (
 
 		W1 = Table.AddColumn(D8, "Week #", each Date.WeekOfYear([Date], FirstWeekDay), Int64.Type),
 		W2 = Table.AddColumn(W1, "Week ##", each Text.PadStart(Text.From(Date.WeekOfYear([Date], FirstWeekDay), LangTag), 2, "0"), type text),
-		W3 = Table.AddColumn(W2, "Week of Month #", each Date.WeekOfMonth([Date], FirstWeekDay), Int64.Type),
-		W4 = Table.AddColumn(W3, "Week Start %", each Date.StartOfWeek([Date], FirstWeekDay), type date),
-		W5 = Table.AddColumn(W4, "Week End %", each Date.EndOfWeek([Date], FirstWeekDay), type date),
+		W3 = Table.AddColumn(W2, "Week @M", each "W" & [#"Week ##"] , type text),
+		W4 = Table.AddColumn(W3, "Week of Month #", each Date.WeekOfMonth([Date], FirstWeekDay), Int64.Type),
+		W5 = Table.AddColumn(W4, "Week Start %", each Date.StartOfWeek([Date], FirstWeekDay), type date),
+		W6 = Table.AddColumn(W5, "Week End %", each Date.EndOfWeek([Date], FirstWeekDay), type date),
 
 		// Weeks are lengtend (>3 days) or shortenned (<4 days) to fit fully into calendar months
-		W6 = Table.AddColumn(W5, "Week Constricted #", each
+		W7 = Table.AddColumn(W6, "Week Constricted #", each
 			if Date.StartOfWeek([Date], FirstWeekDay) < Date.StartOfMonth([Date])
 				then if Duration.Days(Date.StartOfMonth([Date]) - Date.StartOfWeek([Date], FirstWeekDay)) < 4
 					then Date.WeekOfYear([Date], FirstWeekDay) else Date.WeekOfYear(Date.AddWeeks([Date], 1), FirstWeekDay)
