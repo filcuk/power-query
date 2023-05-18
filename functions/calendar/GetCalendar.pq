@@ -22,6 +22,8 @@
 | 		Apply standardised column naming
 |	2023-05-11
 |		Add 'Week @M'
+| 	2023-05-18
+| 		Fix last date (EndDate) not being generated
 | 
 \*********************************************************/
 
@@ -45,7 +47,7 @@ let GetCalendar = (
 		RollMonth = Number.Round(RollYear / 12, 0),
 
 		/* Generate table spine based on a date column */
-		DayCount = Duration.Days(Duration.From(EndDate - StartDate)),
+		DayCount = Duration.Days(Duration.From(EndDate - StartDate)) + 1,
 		Source = List.Dates(StartDate, DayCount, #duration(1, 0, 0, 0)),
 		TableFromList = Table.FromList(Source, Splitter.SplitByNothing()),
 		ChangedType = Table.TransformColumnTypes(TableFromList, {{"Column1", type date}}),
