@@ -25,6 +25,8 @@
 | 	2023-05-18
 | 		Fix last date (EndDate) not being generated
 | 		Add forward-looking bool columns
+| 	2023-05-22
+| 		Add ISO week formats ##, @M
 | 
 \*********************************************************/
 
@@ -65,8 +67,8 @@ let GetCalendar = (
 		D8 = Table.AddColumn(D7, "Day of Year ##", each Text.PadStart(Text.From(Date.DayOfYear([Date]), LangTag), 3, "0"), type text),
 
 		W1 = Table.AddColumn(D8, "Week #", each Date.WeekOfYear([Date], FirstWeekDay), Int64.Type),
-		W2 = Table.AddColumn(W1, "Week ##", each Text.PadStart(Text.From(Date.WeekOfYear([Date], FirstWeekDay), LangTag), 2, "0"), type text),
-		W3 = Table.AddColumn(W2, "Week @M", each "W" & [#"Week ##"] , type text),
+		W2 = Table.AddColumn(W1, "Week ##", each Text.PadStart(Text.From([#"Week #"]), 2, "0"), type text),
+		W3 = Table.AddColumn(W2, "Week @M", each "W" & [#"Week ##"], type text),
 		W4 = Table.AddColumn(W3, "Week of Month #", each Date.WeekOfMonth([Date], FirstWeekDay), Int64.Type),
 		W5 = Table.AddColumn(W4, "Week Start %", each Date.StartOfWeek([Date], FirstWeekDay), type date),
 		W6 = Table.AddColumn(W5, "Week End %", each Date.EndOfWeek([Date], FirstWeekDay), type date),
@@ -111,19 +113,21 @@ let GetCalendar = (
 		// YearCurThu = Date.Year(CurrentThu),
 		// FirstYrThu = Date.AddDays(#date(YearCurThu, 1, 7), - Date.DayOfWeek(#date(YearCurThu, 1, 1), Day.Friday)),
 			// As columns
-		I1 = Table.AddColumn(F6, "CurrentThu", each Date.AddDays([Date], 3 - Date.DayOfWeek([Date], Day.Monday)), type date),
-		I2 = Table.AddColumn(I1, "YearCurThu", each Date.Year([CurrentThu]), Int64.Type), 
-		I3 = Table.AddColumn(I2, "FirstYrThu", each Date.AddDays(#date([YearCurThu], 1, 7), - Date.DayOfWeek(#date([YearCurThu], 1, 1), Day.Friday)), type date),
+		IH1 = Table.AddColumn(F6, "CurrentThu", each Date.AddDays([Date], 3 - Date.DayOfWeek([Date], Day.Monday)), type date),
+		IH2 = Table.AddColumn(IH1, "YearCurThu", each Date.Year([CurrentThu]), Int64.Type), 
+		IH3 = Table.AddColumn(IH2, "FirstYrThu", each Date.AddDays(#date([YearCurThu], 1, 7), - Date.DayOfWeek(#date([YearCurThu], 1, 1), Day.Friday)), type date),
 
-		I4 = Table.AddColumn(I3, "ISO Date #", each Date.Year([Date]) * 10000 + Date.Month([Date]) * 100 + Date.Day([Date]), Int64.Type),
+		I1 = Table.AddColumn(IH3, "ISO Date #", each Date.Year([Date]) * 10000 + Date.Month([Date]) * 100 + Date.Day([Date]), Int64.Type),
 		// Count days between current week's Thursday and the first Thursday of the year
-		I5 = Table.AddColumn(I4, "ISO Week #", each (Duration.Days([CurrentThu] - [FirstYrThu]) / 7) + 1, Int64.Type),
-		I6 = Table.AddColumn(I5, "ISO Week Year #", each Date.Year([CurrentThu]), Int64.Type),
-		I7 = Table.AddColumn(I6, "ISO Week Year #M", each [#"ISO Week Year #"] * 100 + [#"ISO Week #"], Int64.Type),
-		I8 = Table.AddColumn(I7, "ISO Week Year @M", each Number.ToText([#"ISO Week Year #"]) & "-W" & Text.PadStart(Text.From([#"ISO Week #"]), 2, "0"), type text),	// 2022-W00
-		I9 = Table.AddColumn(I8, "ISO Week Year @L", each [#"ISO Week Year @M"] & "-" & Text.PadStart(Text.From(Date.DayOfYear([Date])), 3, "0"), type text),	// 2022-W00-1
+		I2 = Table.AddColumn(I1, "ISO Week #", each (Duration.Days([CurrentThu] - [FirstYrThu]) / 7) + 1, Int64.Type),
+		I3 = Table.AddColumn(I2, "ISO Week ##", each Text.PadStart(Text.From([#"ISO Week #"]), 2, "0"), type text),
+		I4 = Table.AddColumn(I3, "ISO Week @M", each "W" & [#"ISO Week ##"], type text),
+		I5 = Table.AddColumn(I4, "ISO Week Year #", each Date.Year([CurrentThu]), Int64.Type),
+		I6 = Table.AddColumn(I5, "ISO Week Year #M", each [#"ISO Week Year #"] * 100 + [#"ISO Week #"], Int64.Type),
+		I7 = Table.AddColumn(I6, "ISO Week Year @M", each Number.ToText([#"ISO Week Year #"]) & "-W" & Text.PadStart(Text.From([#"ISO Week #"]), 2, "0"), type text),	// 2022-W00
+		I8 = Table.AddColumn(I7, "ISO Week Year @L", each [#"ISO Week Year @M"] & "-" & Text.PadStart(Text.From(Date.DayOfYear([Date])), 3, "0"), type text),	// 2022-W00-1
 
-		I0 = Table.RemoveColumns(I9, {"CurrentThu", "YearCurThu", "FirstYrThu"}),
+		IH0 = Table.RemoveColumns(I8, {"CurrentThu", "YearCurThu", "FirstYrThu"}),
 
 		/* Calendar 4-4-5 */
 		Calendar445 = (WeekNo) => let 
@@ -145,7 +149,7 @@ let GetCalendar = (
 			Result = List.First(List.Select(Periods, each _{0}(WeekNo))){1}
 		in 
 			Result,
-		P1 = Table.ExpandRecordColumn(Table.AddColumn(I0, "Calendar445", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P", "Q"}, {"Period 445 #", "Period 445 Quarter #"}),
+		P1 = Table.ExpandRecordColumn(Table.AddColumn(IH0, "Calendar445", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P", "Q"}, {"Period 445 #", "Period 445 Quarter #"}),
 
 		/* Bool to date */
 		LT1 = Table.AddColumn(P1, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
