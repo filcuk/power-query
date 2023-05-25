@@ -27,6 +27,8 @@
 | 		Add forward-looking bool columns
 | 	2023-05-22
 | 		Add ISO week formats ##, @M
+|	2023-05-25
+| 		Add Period 445 formats ##, @M
 | 
 \*********************************************************/
 
@@ -149,10 +151,13 @@ let GetCalendar = (
 			Result = List.First(List.Select(Periods, each _{0}(WeekNo))){1}
 		in 
 			Result,
-		P1 = Table.ExpandRecordColumn(Table.AddColumn(IH0, "Calendar445", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P", "Q"}, {"Period 445 #", "Period 445 Quarter #"}),
+		P1 = Table.ExpandRecordColumn(Table.AddColumn(IH0, "Calendar445", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P", "Q"}, {"P445 #", "P445 Quarter #"}),
+		P2 = Table.AddColumn(P1, "P445 ##", each Text.PadStart(Text.From([#"P445 #"]), 2, "0"), type text),
+		P3 = Table.AddColumn(P2, "P445 @M", each "P445 " & [#"P445 ##"], type text),
+		P4 = Table.AddColumn(P3, "P445 Quarter @M", each "P445 Q" & Text.From([#"P445 Quarter #"]), type text),
 
 		/* Bool to date */
-		LT1 = Table.AddColumn(P1, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
+		LT1 = Table.AddColumn(P4, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
 		LT2 = Table.AddColumn(LT1, "Is to Date Month", each Date.IsInCurrentMonth([Date]) and [Date] <= Today, type logical),
 		LT3 = Table.AddColumn(LT2, "Is to Date Quarter", each Date.IsInCurrentQuarter([Date]) and [Date] <= Today, type logical),
 		LT4 = Table.AddColumn(LT3, "Is to Date Year", each Date.IsInCurrentYear([Date]) and [Date] <= Today, type logical),
