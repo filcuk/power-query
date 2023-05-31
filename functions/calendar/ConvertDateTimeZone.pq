@@ -36,11 +36,12 @@ let
 
 in
     Output,
-
+  
     FunctionType = type function (
         InputDateTime as (type datetime meta [
-            Documentation.FieldCaption = "Input date time",
-            Documentation.FieldDescription = "Date time value to be converted."
+            Documentation.FieldCaption = "Date time value",
+            Documentation.FieldDescription = "Value to be converted.",
+            Documentation.SampleValues = { "01/01/2023 13:00:00" }
         ]),
         InputTimeZone as (type text meta [
             Documentation.FieldCaption = "Input time zone",
