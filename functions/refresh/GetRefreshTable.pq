@@ -9,7 +9,7 @@
 |
 \*********************************************************/
 
-let GetRefresh = () =>
+let GetRefreshTable = () =>
     let
         Source = DateTimeZone.UtcNow(),
         Table = #table(type table [RefreshUTC = datetimezone], {{Source}}),
@@ -20,4 +20,4 @@ let GetRefresh = () =>
     in
         CultureLocal
 in
-    GetRefresh
+    GetRefreshTable
