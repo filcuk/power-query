@@ -8,6 +8,9 @@
 |=--changelog--------------------------------------------=|
 | 	2023-05-31
 | 		Initial
+|   2023-06-29
+|       Add CET/CEST
+|       Add static DST timezone conversions
 | 
 \*********************************************************/
 
@@ -16,22 +19,46 @@ let
         InputDateTime as datetime,
         InputTimeZone as text,
         TargetTimeZone as text,
-        UseDST as logical
+        AutoDST as logical
     ) as record => let
         
     // BST - British Summer Time
-    BSTStart = Date.StartOfWeek(#datetime(Date.Year(InputDateTime),03,31,0,0,0),Day.Sunday) + #duration(0,1,0,0),
-    BSTClose = Date.StartOfWeek(#datetime(Date.Year(InputDateTime),10,31,0,0,0),Day.Sunday) + #duration(0,1,0,0),
-    IsBST = UseDST and InputDateTime >= BSTStart and InputDateTime < BSTClose,
+    BSTStart = Date.StartOfWeek(#datetime(Date.Year(InputDateTime),03,31,1,0,0),Day.Sunday) + #duration(0,1,0,0),
+    BSTClose = Date.StartOfWeek(#datetime(Date.Year(InputDateTime),10,31,1,0,0),Day.Sunday) + #duration(0,1,0,0),
+    IsBST = AutoDST and InputDateTime >= BSTStart and InputDateTime < BSTClose,
+
+    // CEST - Central European Summer Time
+    CESTStart = Date.StartOfWeek(#datetime(Date.Year(InputDateTime),03,31,1,0,0),Day.Sunday) + #duration(0,1,0,0),
+    CESTClose = Date.StartOfWeek(#datetime(Date.Year(InputDateTime),10,31,1,0,0),Day.Sunday) + #duration(0,1,0,0),
+    IsCEST = AutoDST and InputDateTime >= CESTStart and InputDateTime < CESTClose,
 
     UTCtoGMT = InputDateTime + (if IsBST then #duration(0,1,0,0) else #duration(0,0,0,0)),
     GMTtoUTC = InputDateTime - (if IsBST then #duration(0,1,0,0) else #duration(0,0,0,0)),
+    UTCtoBST = InputDateTime + #duration(0,1,0,0),
+    BSTtoUTC = InputDateTime - #duration(0,1,0,0),
+
+    UTCtoCET = InputDateTime + (if IsBST then #duration(0,2,0,0) else #duration(0,1,0,0)),
+    CETtoUTC = InputDateTime - (if IsBST then #duration(0,2,0,0) else #duration(0,1,0,0)),
+    UTCtoCEST = InputDateTime + #duration(0,2,0,0),
+    CESTtoUTC = InputDateTime - #duration(0,2,0,0),
 
     Output =
         if InputTimeZone = TargetTimeZone then Error.Record("Same input and target time zone.")
+        // else if (List.Contains({ "BST", "CEST" }, InputTimeZone) or List.Contains({ "BST", "CEST" }, TargetTimeZone)) and AutoDST = false
+        //     then Error.Record("DST time zones require 'Auto DST' to be enabled.")
+        
+        // UTC - GMT/BST
         else if InputTimeZone = "UTC" and TargetTimeZone = "GMT" then [DateTime=UTCtoGMT, DST=IsBST]
-        else if InputTimeZone = "GMT" and TargetTimeZone = "UTC" then [DateTime=GMTtoUTC, DST=false]
-        // else if InputTimeZone = "UTC" and TargetTimeZone = "CEST" then CEST
+        else if InputTimeZone = "GMT" and TargetTimeZone = "UTC" then [DateTime=GMTtoUTC, DST=IsBST]
+        else if InputTimeZone = "UTC" and TargetTimeZone = "BST" then [DateTime=UTCtoBST, DST=true]
+        else if InputTimeZone = "BST" and TargetTimeZone = "UTC" then [DateTime=BSTtoUTC, DST=true]
+        
+        // UTC - CET/CEST
+        else if InputTimeZone = "UTC" and TargetTimeZone = "CET" then [DateTime=UTCtoCET, DST=IsCEST]
+        else if InputTimeZone = "CET" and TargetTimeZone = "UTC" then [DateTime=CETtoUTC, DST=IsBST]
+        else if InputTimeZone = "UTC" and TargetTimeZone = "CEST" then [DateTime=UTCtoCEST, DST=true]
+        else if InputTimeZone = "CEST" and TargetTimeZone = "UTC" then [DateTime=CESTtoUTC, DST=true]
+        
         else Error.Record("Unsupported time zone.")
 
 in
@@ -46,16 +73,16 @@ in
         InputTimeZone as (type text meta [
             Documentation.FieldCaption = "Input time zone",
             Documentation.FieldDescription = "Time zone of the input.",
-            Documentation.AllowedValues = { "UTC", "GMT" }
+            Documentation.AllowedValues = { "UTC", "GMT", "BST", "CET", "CEST" }
         ]),
         TargetTimeZone as (type text meta [
             Documentation.FieldCaption = "Target time zone",
             Documentation.FieldDescription = "Desired output time zone.",
-            Documentation.AllowedValues = { "UTC", "GMT" }
+            Documentation.AllowedValues = { "UTC", "GMT", "BST", "CET", "CEST"}
         ]),
-        UseDST as (type logical meta [
-            Documentation.FieldCaption = "Use DST",
-            Documentation.FieldDescription = "Account for daylight saving time.",
+        AutoDST as (type logical meta [
+            Documentation.FieldCaption = "Auto DST",
+            Documentation.FieldDescription = "Adjust for daylight saving time.",
             Documentation.AllowedValues = { true, false }
         ])
     ) as record meta [
