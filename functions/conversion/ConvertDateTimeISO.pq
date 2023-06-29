@@ -14,8 +14,8 @@
 | 
 \*********************************************************/
 
-let ConvertTimeSimple = (SharpTime as number) => let
-        Source = Number.ToText(SharpTime)
+let ConvertDateTimeISO = (DateTime as number) => let
+        Source = Number.ToText(DateTime)
         ,Len = Text.Length(Source)
         ,Hour = Text.Start(Source, (if Len = 6 then 2 else 1))
         ,Minute = Text.Middle(Source, (if Len = 6 then 2 else 1), 2)
@@ -23,4 +23,4 @@ let ConvertTimeSimple = (SharpTime as number) => let
         ,Output = Time
     in Output
 in
-    ConvertTimeSimple
+    ConvertDateTimeISO
