@@ -96,7 +96,7 @@ let GetCalendar = (
 
 		Q1 = Table.AddColumn(M6, "Quarter #", each Date.QuarterOfYear([Date]), Int64.Type),
 		Q2 = Table.AddColumn(Q1, "Quarter ##", each Text.PadStart(Text.From(Date.QuarterOfYear([Date]), LangTag), 2, "0"), type text),
-		Q3 = Table.AddColumn(Q2, "Quarter @M", each "Q" & [#"Quarter #"], type text),
+		Q3 = Table.AddColumn(Q2, "Quarter @M", each "Q" & Text.From([#"Quarter #"]), type text),
 		Q4 = Table.AddColumn(Q3, "Quarter @L", each "Q" & [#"Quarter ##"], type text),
 		Q5 = Table.AddColumn(Q4, "Quarter Start %", each Date.StartOfQuarter([Date]), type date),
 		Q6 = Table.AddColumn(Q5, "Quarter End %", each Date.EndOfQuarter([Date]), type date),
