@@ -31,6 +31,9 @@
 | 		Add Period 445 formats ##, @M
 | 	2023-08-03
 |		Add Quarter @M, @L
+| 	2023-08-23
+| 		Add [Day & Weekday @M]
+| 		Fix [Day of Week ##] showing day of month
 | 
 \*********************************************************/
 
@@ -64,13 +67,15 @@ let GetCalendar = (
 		D1 = Table.AddColumn(RenamedColumns, "Day of Month #", each Date.Day([Date]), Int64.Type),
 		D2 = Table.AddColumn(D1, "Day of Month ##", each Date.ToText([Date], "dd", LangTag), type text),
 		D3 = Table.AddColumn(D2, "Day of Week #", each Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type),
-		D4 = Table.AddColumn(D3, "Day of Week ##", each Date.ToText([Date], "dd", LangTag), type text),
+		D4 = Table.AddColumn(D3, "Day of Week ##", each Text.PadStart(Text.From([#"Day of Week #"]), 2, "0"), type text),
 		D5 = Table.AddColumn(D4, "Day of Week @M", each Date.ToText([Date], "ddd", LangTag), type text),
 		D6 = Table.AddColumn(D5, "Day of Week @L", each Date.DayOfWeekName([Date], LangTag), type text),
 		D7 = Table.AddColumn(D6, "Day of Year #", each Date.DayOfYear([Date]), Int64.Type),
 		D8 = Table.AddColumn(D7, "Day of Year ##", each Text.PadStart(Text.From(Date.DayOfYear([Date]), LangTag), 3, "0"), type text),
 
-		W1 = Table.AddColumn(D8, "Week #", each Date.WeekOfYear([Date], FirstWeekDay), Int64.Type),
+		E1 = Table.AddColumn(D8, "Day & Weekday @M", each [#"Day of Month ##"] & ", " & [#"Day of Week @M"], type text),
+
+		W1 = Table.AddColumn(E1, "Week #", each Date.WeekOfYear([Date], FirstWeekDay), Int64.Type),
 		W2 = Table.AddColumn(W1, "Week ##", each Text.PadStart(Text.From([#"Week #"]), 2, "0"), type text),
 		W3 = Table.AddColumn(W2, "Week @M", each "W" & [#"Week ##"], type text),
 		W4 = Table.AddColumn(W3, "Week of Month #", each Date.WeekOfMonth([Date], FirstWeekDay), Int64.Type),
