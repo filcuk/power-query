@@ -34,6 +34,9 @@
 | 	2023-08-23
 | 		Add [Day & Weekday @M]
 | 		Fix [Day of Week ##] showing day of month
+| 	2023-10-13
+|		Change [ISO Week Year #] to [ISO Year #]
+| 		Add [ISO Week Year #] as YYYYWW, [Month Year #], [Month Year @M]
 | 
 \*********************************************************/
 
@@ -96,10 +99,12 @@ let GetCalendar = (
 		M2 = Table.AddColumn(M1, "Month ##", each Date.ToText([Date], "MM", LangTag), type text),
 		M3 = Table.AddColumn(M2, "Month @M", each Date.ToText([Date], "MMM", LangTag), type text),
 		M4 = Table.AddColumn(M3, "Month @L", each Date.MonthName([Date], LangTag), type text),
-		M5 = Table.AddColumn(M4, "Month Start %", each Date.StartOfMonth([Date]), type date),
-		M6 = Table.AddColumn(M5, "Month End %", each Date.EndOfMonth([Date]), type date),
+		M5 = Table.AddColumn(M4, "Month Year #", each Date.Year([Date]) * 100 + Date.Month([Date]), Int64.Type),
+		M6 = Table.AddColumn(M5, "Month Year @M", each Text.From(Date.Year([Date])) & "-" & [#"Month ##"], type text),
+		M7 = Table.AddColumn(M6, "Month Start %", each Date.StartOfMonth([Date]), type date),
+		M8 = Table.AddColumn(M7, "Month End %", each Date.EndOfMonth([Date]), type date),
 
-		Q1 = Table.AddColumn(M6, "Quarter #", each Date.QuarterOfYear([Date]), Int64.Type),
+		Q1 = Table.AddColumn(M8, "Quarter #", each Date.QuarterOfYear([Date]), Int64.Type),
 		Q2 = Table.AddColumn(Q1, "Quarter ##", each Text.PadStart(Text.From(Date.QuarterOfYear([Date]), LangTag), 2, "0"), type text),
 		Q3 = Table.AddColumn(Q2, "Quarter @M", each "Q" & Text.From([#"Quarter #"]), type text),
 		Q4 = Table.AddColumn(Q3, "Quarter @L", each "Q" & [#"Quarter ##"], type text),
@@ -133,12 +138,13 @@ let GetCalendar = (
 		I2 = Table.AddColumn(I1, "ISO Week #", each (Duration.Days([CurrentThu] - [FirstYrThu]) / 7) + 1, Int64.Type),
 		I3 = Table.AddColumn(I2, "ISO Week ##", each Text.PadStart(Text.From([#"ISO Week #"]), 2, "0"), type text),
 		I4 = Table.AddColumn(I3, "ISO Week @M", each "W" & [#"ISO Week ##"], type text),
-		I5 = Table.AddColumn(I4, "ISO Week Year #", each Date.Year([CurrentThu]), Int64.Type),
-		I6 = Table.AddColumn(I5, "ISO Week Year #M", each [#"ISO Week Year #"] * 100 + [#"ISO Week #"], Int64.Type),
-		I7 = Table.AddColumn(I6, "ISO Week Year @M", each Number.ToText([#"ISO Week Year #"]) & "-W" & Text.PadStart(Text.From([#"ISO Week #"]), 2, "0"), type text),	// 2022-W00
-		I8 = Table.AddColumn(I7, "ISO Week Year @L", each [#"ISO Week Year @M"] & "-" & Text.PadStart(Text.From(Date.DayOfYear([Date])), 3, "0"), type text),	// 2022-W00-1
+		I5 = Table.AddColumn(I4, "ISO Year #", each Date.Year([CurrentThu]), Int64.Type),
+		I6 = Table.AddColumn(I5, "ISO Week Year #", each Text.From([#"ISO Year #"]) & Text.PadStart(Text.From([#"ISO Week #"]), 2, "0"), type text),
+		I7 = Table.AddColumn(I6, "ISO Week Year #M", each [#"ISO Year #"] * 100 + [#"ISO Week #"], Int64.Type),
+		I8 = Table.AddColumn(I7, "ISO Week Year @M", each Number.ToText([#"ISO Year #"]) & "-W" & Text.PadStart(Text.From([#"ISO Week #"]), 2, "0"), type text),	// 2022-W00
+		I9 = Table.AddColumn(I8, "ISO Week Year @L", each [#"ISO Week Year @M"] & "-" & Text.PadStart(Text.From(Date.DayOfYear([Date])), 3, "0"), type text),	// 2022-W00-1
 
-		IH0 = Table.RemoveColumns(I8, {"CurrentThu", "YearCurThu", "FirstYrThu"}),
+		IH0 = Table.RemoveColumns(I9, {"CurrentThu", "YearCurThu", "FirstYrThu"}),
 
 		/* Calendar 4-4-5 */
 		Calendar445 = (WeekNo) => let 
