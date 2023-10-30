@@ -37,6 +37,8 @@
 | 	2023-10-13
 |		Change [ISO Week Year #] to [ISO Year #]
 | 		Add [ISO Week Year #] as YYYYWW, [Month Year #], [Month Year @M]
+|	2023-10-26
+| 		Add [Date is Before Today], [Date is After Today]
 | 
 \*********************************************************/
 
@@ -178,7 +180,10 @@ let GetCalendar = (
 		LT4 = Table.AddColumn(LT3, "Is to Date Year", each Date.IsInCurrentYear([Date]) and [Date] <= Today, type logical),
 
 		/* Bool relative */
-		LD1 = Table.AddColumn(LT4, "Is in D-2", each Date.IsInPreviousNDays([Date], 2) and not Date.IsInPreviousNDays([Date], 1), type logical),
+		LR1 = Table.AddColumn(LT4, "Is Before Today", each [Date] < Today, type logical),
+		LR2 = Table.AddColumn(LR1, "Is After Today", each [Date] > Today, type logical),
+
+		LD1 = Table.AddColumn(LR2, "Is in D-2", each Date.IsInPreviousNDays([Date], 2) and not Date.IsInPreviousNDays([Date], 1), type logical),
 		LD2 = Table.AddColumn(LD1, "Is in D-1", each Date.IsInPreviousDay([Date]), type logical),
 		LD3 = Table.AddColumn(LD2, "Is in D-0", each Date.IsInCurrentDay([Date]), type logical),
 		LD4 = Table.AddColumn(LD3, "Is in D+1", each Date.IsInNextDay([Date]), type logical),
