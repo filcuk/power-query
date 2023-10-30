@@ -39,6 +39,10 @@
 | 		Add [ISO Week Year #] as YYYYWW, [Month Year #], [Month Year @M]
 |	2023-10-26
 | 		Add [Date is Before Today], [Date is After Today]
+| 	2023-10-30
+| 		Add [Week Year #, #M, @M, @L]
+| 		Fix [Day of Week #] not using FirstWeekDay parameter
+| 		Remove [Day of Week ##]
 | 
 \*********************************************************/
 
@@ -71,14 +75,13 @@ let GetCalendar = (
 		/* Date columns */
 		D1 = Table.AddColumn(RenamedColumns, "Day of Month #", each Date.Day([Date]), Int64.Type),
 		D2 = Table.AddColumn(D1, "Day of Month ##", each Date.ToText([Date], "dd", LangTag), type text),
-		D3 = Table.AddColumn(D2, "Day of Week #", each Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type),
-		D4 = Table.AddColumn(D3, "Day of Week ##", each Text.PadStart(Text.From([#"Day of Week #"]), 2, "0"), type text),
-		D5 = Table.AddColumn(D4, "Day of Week @M", each Date.ToText([Date], "ddd", LangTag), type text),
-		D6 = Table.AddColumn(D5, "Day of Week @L", each Date.DayOfWeekName([Date], LangTag), type text),
-		D7 = Table.AddColumn(D6, "Day of Year #", each Date.DayOfYear([Date]), Int64.Type),
-		D8 = Table.AddColumn(D7, "Day of Year ##", each Text.PadStart(Text.From(Date.DayOfYear([Date]), LangTag), 3, "0"), type text),
+		D3 = Table.AddColumn(D2, "Day of Week #", each Date.DayOfWeek([Date], FirstWeekDay) + 1, Int64.Type),
+		D4 = Table.AddColumn(D3, "Day of Week @M", each Date.ToText([Date], "ddd", LangTag), type text),
+		D5 = Table.AddColumn(D4, "Day of Week @L", each Date.DayOfWeekName([Date], LangTag), type text),
+		D6 = Table.AddColumn(D5, "Day of Year #", each Date.DayOfYear([Date]), Int64.Type),
+		D7 = Table.AddColumn(D6, "Day of Year ##", each Text.PadStart(Text.From(Date.DayOfYear([Date]), LangTag), 3, "0"), type text),
 
-		E1 = Table.AddColumn(D8, "Day & Weekday @M", each [#"Day of Month ##"] & ", " & [#"Day of Week @M"], type text),
+		E1 = Table.AddColumn(D7, "Day & Weekday @M", each [#"Day of Month ##"] & ", " & [#"Day of Week @M"], type text),
 
 		W1 = Table.AddColumn(E1, "Week #", each Date.WeekOfYear([Date], FirstWeekDay), Int64.Type),
 		W2 = Table.AddColumn(W1, "Week ##", each Text.PadStart(Text.From([#"Week #"]), 2, "0"), type text),
@@ -86,9 +89,13 @@ let GetCalendar = (
 		W4 = Table.AddColumn(W3, "Week of Month #", each Date.WeekOfMonth([Date], FirstWeekDay), Int64.Type),
 		W5 = Table.AddColumn(W4, "Week Start %", each Date.StartOfWeek([Date], FirstWeekDay), type date),
 		W6 = Table.AddColumn(W5, "Week End %", each Date.EndOfWeek([Date], FirstWeekDay), type date),
-
+		W7 = Table.AddColumn(W6, "Week Year #", each Text.From(Date.Year([Date])) & Text.PadStart(Text.From([#"Week #"]), 2, "0"), type text),
+		W8 = Table.AddColumn(W7, "Week Year #M", each Date.Year([Date]) * 100 + [#"Week #"], Int64.Type),
+		W9 = Table.AddColumn(W8, "Week Year @M", each Number.ToText(Date.Year([Date])) & "-W" & Text.PadStart(Text.From([#"Week #"]), 2, "0"), type text),	// 2022-W00
+		W0 = Table.AddColumn(W9, "Week Year @L", each [#"Week Year @M"] & "-" & Text.PadStart(Text.From(Date.DayOfYear([Date])), 3, "0"), type text),	// 2022-W00-1
+		
 		// Weeks are lengtend (>3 days) or shortenned (<4 days) to fit fully into calendar months
-		W7 = Table.AddColumn(W6, "Week Constricted #", each
+		V1 = Table.AddColumn(W0, "Week Constricted #", each
 			if Date.StartOfWeek([Date], FirstWeekDay) < Date.StartOfMonth([Date])
 				then if Duration.Days(Date.StartOfMonth([Date]) - Date.StartOfWeek([Date], FirstWeekDay)) < 4
 					then Date.WeekOfYear([Date], FirstWeekDay) else Date.WeekOfYear(Date.AddWeeks([Date], 1), FirstWeekDay)
@@ -97,7 +104,7 @@ let GetCalendar = (
 					then Date.WeekOfYear([Date], FirstWeekDay) else Date.WeekOfYear(Date.AddWeeks([Date], -1), FirstWeekDay)
 			else Date.WeekOfYear([Date], FirstWeekDay), Int64.Type),
 
-		M1 = Table.AddColumn(W6, "Month #", each Date.Month([Date]), Int64.Type),
+		M1 = Table.AddColumn(V1, "Month #", each Date.Month([Date]), Int64.Type),
 		M2 = Table.AddColumn(M1, "Month ##", each Date.ToText([Date], "MM", LangTag), type text),
 		M3 = Table.AddColumn(M2, "Month @M", each Date.ToText([Date], "MMM", LangTag), type text),
 		M4 = Table.AddColumn(M3, "Month @L", each Date.MonthName([Date], LangTag), type text),
