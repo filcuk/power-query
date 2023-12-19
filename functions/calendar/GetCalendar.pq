@@ -43,6 +43,9 @@
 | 		Add [Week Year #, #M, @M, @L]
 | 		Fix [Day of Week #] not using FirstWeekDay parameter
 | 		Remove [Day of Week ##]
+| 	2023-12-11, 1.5.6
+|		Add [Is ≤ Today], [Is ≥ Today]
+|		Change field names [Is < Today], [Is > Today]
 | 
 \*********************************************************/
 
@@ -187,10 +190,12 @@ let GetCalendar = (
 		LT4 = Table.AddColumn(LT3, "Is to Date Year", each Date.IsInCurrentYear([Date]) and [Date] <= Today, type logical),
 
 		/* Bool relative */
-		LR1 = Table.AddColumn(LT4, "Is Before Today", each [Date] < Today, type logical),
-		LR2 = Table.AddColumn(LR1, "Is After Today", each [Date] > Today, type logical),
+		LR1 = Table.AddColumn(LT4, "Is < Today", each [Date] < Today, type logical),
+		LR2 = Table.AddColumn(LR1, "Is ≤ Today", each [Date] <= Today, type logical),
+		LR3 = Table.AddColumn(LR2, "Is > Today", each [Date] > Today, type logical),
+		LR4 = Table.AddColumn(LR3, "Is ≥ Today", each [Date] >= Today, type logical),
 
-		LD1 = Table.AddColumn(LR2, "Is in D-2", each Date.IsInPreviousNDays([Date], 2) and not Date.IsInPreviousNDays([Date], 1), type logical),
+		LD1 = Table.AddColumn(LR4, "Is in D-2", each Date.IsInPreviousNDays([Date], 2) and not Date.IsInPreviousNDays([Date], 1), type logical),
 		LD2 = Table.AddColumn(LD1, "Is in D-1", each Date.IsInPreviousDay([Date]), type logical),
 		LD3 = Table.AddColumn(LD2, "Is in D-0", each Date.IsInCurrentDay([Date]), type logical),
 		LD4 = Table.AddColumn(LD3, "Is in D+1", each Date.IsInNextDay([Date]), type logical),
