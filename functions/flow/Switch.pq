@@ -17,7 +17,6 @@
 \*********************************************************/
 
 let
-    // Created by Daniil Maslyuk
     Switch =
         let
             Function = (input as list) as any =>
