@@ -1,8 +1,8 @@
 /*********************************************************\
-| CLEAN HEADERS
+| GET ERRORS
 |
 |=--purpose----------------------------------------------=|
-| Use Text.Clean() to clean table headers.
+| Return error values with messages, where possible.
 | 
 |=--credits----------------------------------------------=|
 | Original https://community.fabric.microsoft.com/t5/Power-Query/List-all-errors-in-a-table/td-p/1470730
@@ -13,9 +13,11 @@
 | 		Initial
 |   2023-11-15, 1.1.0
 |       Fix Excel formula errors showing as null
+|   2024-01-25, 1.2.0
+|       Add parameter to allow returning full table
 \*********************************************************/
 
-(table as table) as table =>
+(Table as table, ReturnAll as logical) as table =>
     let
         errorExtract = (value as any) as any => 
             if value[HasError] = true
@@ -38,13 +40,24 @@
                     Record.AddField(s, c, errorToText(errorExtract(try Record.Field(rec, c)))) 
             ),
 
-        Output = 
+        OutputErrors = 
             Table.FromList(
                 List.Transform(
                     Table.ToRecords(
-                        Table.SelectRowsWithErrors(table)
+                        Table.SelectRowsWithErrors(Table)
                     ), each recsToErrors(_)
-                ), Record.FieldValues, Table.ColumnNames(table)
-            )
+                ), Record.FieldValues, Table.ColumnNames(Table)
+            ),
+        
+        OutputAll = 
+            Table.FromList(
+                List.Transform(
+                    Table.ToRecords(
+                        Table
+                    ), each recsToErrors(_)
+                ), Record.FieldValues, Table.ColumnNames(Table)
+            ),
+        
+        Output = if ReturnAll then OutputAll else OutputErrors
     in
         Output
