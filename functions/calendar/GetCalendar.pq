@@ -46,7 +46,9 @@
 | 	2023-12-11, 1.5.6
 |		Add [Is ≤ Today], [Is ≥ Today]
 |		Change field names [Is < Today], [Is > Today]
-| 
+|	2024-03-13, 1.6.0
+| 		Add [Is Weekday/Weekend/Workday]
+| 		Add GB holiday source (web)
 \*********************************************************/
 
 let GetCalendar = (
@@ -54,29 +56,54 @@ let GetCalendar = (
 	EndDate as date,
 	optional LangTag as nullable text,
 	optional FirstWeekDay as nullable number,
-	optional FinYearStartMo as nullable number
+	optional FinYearStartMo as nullable number,
+	optional GetWebHolidays as nullable logical
 ) as table =>
 	let
-		/* Defaults */
+		// Defaults //
 		LangTag = if LangTag is null then "en-GB" else LangTag,
 		FirstWeekDay = if FirstWeekDay is null then Day.Monday else FirstWeekDay,
 		FinYearStartMo = if FinYearStartMo is null then 7 else FinYearStartMo,
-		
-		/* Variables */
+		GetWebHolidays = if GetWebHolidays is null then false else GetWebHolidays,
+
+		// Variables //
 		Today = Date.From(DateTime.LocalNow()),
 		RollYear = Number.Round(365.25, 0),
 		RollQuarter = Number.Round(RollYear / 4, 0),
 		RollMonth = Number.Round(RollYear / 12, 0),
 
-		/* Generate table spine based on a date column */
+		// Generate table spine based on a date column //
 		DayCount = Duration.Days(Duration.From(EndDate - StartDate)) + 1,
 		Source = List.Dates(StartDate, DayCount, #duration(1, 0, 0, 0)),
 		TableFromList = Table.FromList(Source, Splitter.SplitByNothing()),
 		ChangedType = Table.TransformColumnTypes(TableFromList, {{"Column1", type date}}),
 		RenamedColumns = Table.RenameColumns(ChangedType,{{"Column1", "Date"}}),
+		Cal = RenamedColumns,
 
-		/* Date columns */
-		D1 = Table.AddColumn(RenamedColumns, "Day of Month #", each Date.Day([Date]), Int64.Type),
+		// GB holidays - England & Wales //
+		Holidays =  if not GetWebHolidays then Cal else let
+			HolidaysGB = let
+				Source = Json.Document(Web.Contents("https://www.gov.uk/bank-holidays.json")),
+				Table = Record.ToTable(Source),
+				KeepCols = Table.SelectColumns(Table,{"Value"}),
+				ExpandRecs = Table.ExpandRecordColumn(KeepCols, "Value", {"division", "events"}, {"Country", "Events"}),
+				ReplaceList = [#"england-and-wales" = "GB-EAW", #"scotland" = "GB-SCT", #"northern-ireland" = "GB-NIR"],
+				ReplaceCountry = Table.TransformColumns(ExpandRecs, {{"Country", each Record.FieldOrDefault(ReplaceList, _, _)}}),
+				ExpandEvents = Table.ExpandRecordColumn(Table.ExpandListColumn(ReplaceCountry, "Events"), "Events", {"date", "title"}, {"Date", "Title"}),
+				Group = Table.Group(ExpandEvents, {"Date"}, {{"Holiday", each [[Country], [Title]], type table [Country=text, Title=text]}}),
+				Type = Table.TransformColumnTypes(Group,{{"Date", type date}})
+
+			in
+				Type,
+			// Join = Table.NestedJoin(Cal, {"Date"}, Table.SelectRows(HolidaysGB, each [country] = "GB-EAW"), {"date"}, "holidays-gb", JoinKind.LeftOuter),
+			Join = Table.NestedJoin(Cal, {"Date"}, HolidaysGB, {"Date"}, "HolidayTable", JoinKind.LeftOuter),
+			Expand = Table.ExpandTableColumn(Join, "HolidayTable", {"Holiday"}, {"Holiday"})
+		in
+			Expand,
+		CalCols = Holidays,
+
+		// Date columns //
+		D1 = Table.AddColumn(CalCols, "Day of Month #", each Date.Day([Date]), Int64.Type),
 		D2 = Table.AddColumn(D1, "Day of Month ##", each Date.ToText([Date], "dd", LangTag), type text),
 		D3 = Table.AddColumn(D2, "Day of Week #", each Date.DayOfWeek([Date], FirstWeekDay) + 1, Int64.Type),
 		D4 = Table.AddColumn(D3, "Day of Week @M", each Date.ToText([Date], "ddd", LangTag), type text),
@@ -126,7 +153,7 @@ let GetCalendar = (
 		Y1 = Table.AddColumn(Q6, "Year #", each Date.Year([Date]), Int64.Type),
 		Y2 = Table.AddColumn(Y1, "Year @M", each Date.ToText([Date], "yy", LangTag), type text),
 
-		/* Financial */
+		// Financial //
 		F1 = Table.AddColumn(Y2, "Financial Year #", each if Date.Month([Date]) >= FinYearStartMo then Date.Year([Date]) else Date.Year([Date]) - 1, Int64.Type),
 		F2 = Table.AddColumn(F1, "Financial Year @M", each "FY" & Text.End(Number.ToText([#"Financial Year #"], "D"), 2) & "/" & Text.End(Number.ToText([#"Financial Year #"] + 1, "D"), 2), type text),
 		F3 = Table.AddColumn(F2, "Financial Quarter #", each Number.RoundUp((Date.Month([Date]) + ((FinYearStartMo - 1) * (if Date.Month([Date]) >= FinYearStartMo then -1 else 1))) / 3, 0), Int64.Type),
@@ -134,7 +161,7 @@ let GetCalendar = (
 		F5 = Table.AddColumn(F4, "Financial Month #", each Date.Month([Date]) + ((FinYearStartMo - 1) * (if Date.Month([Date]) >= FinYearStartMo then -1 else 1)), Int64.Type),
 		F6 = Table.AddColumn(F5, "Financial Month @M", each "FM" & Number.ToText([#"Financial Month #"], "D"), type text),
 
-		/* ISO */
+		// ISO //
 		// Get Thursday of each week, year of that Thursday and first Thursday of the year
 			// As vars
 		// CurrentThu = Date.AddDays([Date], 3 - Date.DayOfWeek([Date], Day.Monday)),
@@ -158,7 +185,7 @@ let GetCalendar = (
 
 		IH0 = Table.RemoveColumns(I9, {"CurrentThu", "YearCurThu", "FirstYrThu"}),
 
-		/* Calendar 4-4-5 */
+		// Calendar 4-4-5 //
 		Calendar445 = (WeekNo) => let 
 			Periods = 
 				{ 
@@ -183,13 +210,13 @@ let GetCalendar = (
 		P3 = Table.AddColumn(P2, "P445 @M", each "P445 " & [#"P445 ##"], type text),
 		P4 = Table.AddColumn(P3, "P445 Quarter @M", each "P445 Q" & Text.From([#"P445 Quarter #"]), type text),
 
-		/* Bool to date */
+		// Bool to date //
 		LT1 = Table.AddColumn(P4, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
 		LT2 = Table.AddColumn(LT1, "Is to Date Month", each Date.IsInCurrentMonth([Date]) and [Date] <= Today, type logical),
 		LT3 = Table.AddColumn(LT2, "Is to Date Quarter", each Date.IsInCurrentQuarter([Date]) and [Date] <= Today, type logical),
 		LT4 = Table.AddColumn(LT3, "Is to Date Year", each Date.IsInCurrentYear([Date]) and [Date] <= Today, type logical),
 
-		/* Bool relative */
+		// Bool relative //
 		LR1 = Table.AddColumn(LT4, "Is < Today", each [Date] < Today, type logical),
 		LR2 = Table.AddColumn(LR1, "Is ≤ Today", each [Date] <= Today, type logical),
 		LR3 = Table.AddColumn(LR2, "Is > Today", each [Date] > Today, type logical),
@@ -206,6 +233,12 @@ let GetCalendar = (
 		LW3 = Table.AddColumn(LW2, "Is in W-0", each Date.IsInCurrentWeek([Date]), type logical),
 		LW4 = Table.AddColumn(LW3, "Is in W+1", each Date.IsInNextWeek([Date]), type logical),
 		LW5 = Table.AddColumn(LW4, "Is in W+2", each Date.IsInNextNWeeks([Date], 2) and not Date.IsInNextNWeeks([Date], 1), type logical),
+
+		// LI1 = Table.AddColumn(LW5, "Is in I-2", each Date.IsInPreviousNWeeks([Date], 2) and not Date.IsInPreviousNWeeks([Date], 1), type logical),
+		// LI2 = Table.AddColumn(LI1, "Is in I-1", each Date.IsInPreviousWeek([Date]), type logical),
+		// LI3 = Table.AddColumn(LI2, "Is in I-0", each Date.IsInCurrentWeek([Date]), type logical),
+		// LI4 = Table.AddColumn(LI3, "Is in I+1", each Date.IsInNextWeek([Date]), type logical),
+		// LI5 = Table.AddColumn(LI4, "Is in I+2", each Date.IsInNextNWeeks([Date], 2) and not Date.IsInNextNWeeks([Date], 1), type logical),
 
 		LM1 = Table.AddColumn(LW5, "Is in M-2", each Date.IsInPreviousNMonths([Date], 2) and not Date.IsInPreviousNMonths([Date], 1), type logical),
 		LM2 = Table.AddColumn(LM1, "Is in M-1", each Date.IsInPreviousMonth([Date]), type logical),
@@ -225,8 +258,16 @@ let GetCalendar = (
 		LY4 = Table.AddColumn(LY3, "Is in Y+1", each Date.IsInNextYear([Date]), type logical),
 		LY5 = Table.AddColumn(LY4, "Is in Y+2", each Date.IsInNextNYears([Date], 2) and not Date.IsInNextNYears([Date], 1), type logical),
 
-		/* Bool rolling */
-		RW1 = Table.AddColumn(LY5, "Is Rolling W-1", each Date.IsInPreviousNDays([Date], 7 * 2) and not Date.IsInPreviousNDays([Date], 7), type logical),
+		LH1 = Table.AddColumn(LY5, "Is Weekday", each Date.DayOfWeek([Date], Day.Monday) <= 4, type logical),
+		LH2 = Table.AddColumn(LH1, "Is Weekend", each Date.DayOfWeek([Date], Day.Monday) >= 5, type logical),
+		// LH3 = Table.AddColumn(LH2, "Is Holiday", each if GetWebHolidays then [#"Holiday (GB-EAW)"] <> null else null, type logical),
+		// LH3_1 = Table.AddColumn(LH3, "Is Holiday (GB-EAW)", each if GetWebHolidays then [#"Holiday (GB-EAW)"] <> null else null, type logical),
+		// LH4 = Table.AddColumn(LH3_1, "Is Workday", each not [Is Holiday], type logical),
+		// LH4_1 = Table.AddColumn(LH4, "Is Workday (GB-EAW)", each if GetWebHolidays then ([#"Holiday (GB-EAW)"] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4) else null, type logical),
+		// TEST1 = Table.AddColumn(LH4_1, "TEST1", each ),
+
+		// Binary rolling //
+		RW1 = Table.AddColumn(LH2, "Is Rolling W-1", each Date.IsInPreviousNDays([Date], 7 * 2) and not Date.IsInPreviousNDays([Date], 7), type logical),
 		RW2 = Table.AddColumn(RW1, "Is Rolling W-0", each Date.IsInPreviousNDays([Date], 7), type logical),
 		RW3 = Table.AddColumn(RW2, "Is Rolling W+1", each Date.IsInNextNDays([Date], 7 * 2) and not Date.IsInNextNDays([Date], 7), type logical),
 
