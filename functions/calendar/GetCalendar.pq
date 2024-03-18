@@ -49,6 +49,7 @@
 |	2024-03-13, 1.6.0
 | 		Add [Is Weekday/Weekend/Workday]
 | 		Add GB holiday source (web)
+|		Add parameter for web holiday source
 \*********************************************************/
 
 let GetCalendar = (
@@ -87,10 +88,11 @@ let GetCalendar = (
 				Table = Record.ToTable(Source),
 				KeepCols = Table.SelectColumns(Table,{"Value"}),
 				ExpandRecs = Table.ExpandRecordColumn(KeepCols, "Value", {"division", "events"}, {"Country", "Events"}),
-				ReplaceList = [#"england-and-wales" = "GB-EAW", #"scotland" = "GB-SCT", #"northern-ireland" = "GB-NIR"],
+				ReplaceList = [#"england-and-wales" = "GB_EAW", #"scotland" = "GB_SCT", #"northern-ireland" = "GB_NIR"],
 				ReplaceCountry = Table.TransformColumns(ExpandRecs, {{"Country", each Record.FieldOrDefault(ReplaceList, _, _)}}),
 				ExpandEvents = Table.ExpandRecordColumn(Table.ExpandListColumn(ReplaceCountry, "Events"), "Events", {"date", "title"}, {"Date", "Title"}),
-				Group = Table.Group(ExpandEvents, {"Date"}, {{"Holiday", each [[Country], [Title]], type table [Country=text, Title=text]}}),
+				// Group = Table.Group(ExpandEvents, {"Date"}, {{"Holiday", each [[Country], [Title]], type table [Country=text, Title=text]}}),
+				Group = Table.Group(ExpandEvents, {"Date"}, {{"Holiday", each Table.ToRecords(Table.PromoteHeaders(Table.Transpose([[Country], [Title]]))){0}, type record}}),
 				Type = Table.TransformColumnTypes(Group,{{"Date", type date}})
 
 			in
@@ -261,13 +263,15 @@ let GetCalendar = (
 		LH1 = Table.AddColumn(LY5, "Is Weekday", each Date.DayOfWeek([Date], Day.Monday) <= 4, type logical),
 		LH2 = Table.AddColumn(LH1, "Is Weekend", each Date.DayOfWeek([Date], Day.Monday) >= 5, type logical),
 		// LH3 = Table.AddColumn(LH2, "Is Holiday", each if GetWebHolidays then [#"Holiday (GB-EAW)"] <> null else null, type logical),
-		// LH3_1 = Table.AddColumn(LH3, "Is Holiday (GB-EAW)", each if GetWebHolidays then [#"Holiday (GB-EAW)"] <> null else null, type logical),
+		LH3_GB_EAW = if not(GetWebHolidays) then LH2 else
+			Table.AddColumn(LH2, "Is Holiday (GB-EAW)", each [Holiday][GB_EAW] <> null, type logical),
 		// LH4 = Table.AddColumn(LH3_1, "Is Workday", each not [Is Holiday], type logical),
-		// LH4_1 = Table.AddColumn(LH4, "Is Workday (GB-EAW)", each if GetWebHolidays then ([#"Holiday (GB-EAW)"] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4) else null, type logical),
-		// TEST1 = Table.AddColumn(LH4_1, "TEST1", each ),
+		LH4_GB_EAW = if not(GetWebHolidays) then LH2 else
+			Table.AddColumn(LH3_GB_EAW, "Is Workday (GB-EAW)", each ([Holiday][GB_EAW] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
+		LHx = LH4_GB_EAW,
 
 		// Binary rolling //
-		RW1 = Table.AddColumn(LH2, "Is Rolling W-1", each Date.IsInPreviousNDays([Date], 7 * 2) and not Date.IsInPreviousNDays([Date], 7), type logical),
+		RW1 = Table.AddColumn(LHx, "Is Rolling W-1", each Date.IsInPreviousNDays([Date], 7 * 2) and not Date.IsInPreviousNDays([Date], 7), type logical),
 		RW2 = Table.AddColumn(RW1, "Is Rolling W-0", each Date.IsInPreviousNDays([Date], 7), type logical),
 		RW3 = Table.AddColumn(RW2, "Is Rolling W+1", each Date.IsInNextNDays([Date], 7 * 2) and not Date.IsInNextNDays([Date], 7), type logical),
 
