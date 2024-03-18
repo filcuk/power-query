@@ -52,6 +52,7 @@
 |		Add parameter for web holiday source
 |	2024-03-18, 1.7.0
 |		Add [Relative Days/Weeks/Months/Quarters/Years]
+|		Add [Is Leap Year], [Is Leap Day]
 \*********************************************************/
 
 let GetCalendar = (
@@ -270,16 +271,19 @@ let GetCalendar = (
 		LY3 = Table.AddColumn(LY2, "Is in Y-0", each Date.IsInCurrentYear([Date]), type logical),
 		LY4 = Table.AddColumn(LY3, "Is in Y+1", each Date.IsInNextYear([Date]), type logical),
 		LY5 = Table.AddColumn(LY4, "Is in Y+2", each Date.IsInNextNYears([Date], 2) and not Date.IsInNextNYears([Date], 1), type logical),
+		LYx = LY5,
 
-		LH1 = Table.AddColumn(LY5, "Is Weekday", each Date.DayOfWeek([Date], Day.Monday) <= 4, type logical),
-		LH2 = Table.AddColumn(LH1, "Is Weekend", each Date.DayOfWeek([Date], Day.Monday) >= 5, type logical),
-		// LH3 = Table.AddColumn(LH2, "Is Holiday", each if GetWebHolidays then [#"Holiday (GB-EAW)"] <> null else null, type logical),
-		LH3_GB_EAW = if not(GetWebHolidays) then LH2 else
-			Table.AddColumn(LH2, "Is Holiday (GB-EAW)", each [Holiday][GB_EAW] <> null, type logical),
-		// LH4 = Table.AddColumn(LH3_1, "Is Workday", each not [Is Holiday], type logical),
-		LH4_GB_EAW = if not(GetWebHolidays) then LH2 else
-			Table.AddColumn(LH3_GB_EAW, "Is Workday (GB-EAW)", each ([Holiday][GB_EAW] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
-		LHx = LH4_GB_EAW,
+		LH1 = Table.AddColumn(LYx, "Is Leap Year", each Date.IsLeapYear([Date]), type logical),
+		LH2 = Table.AddColumn(LY1, "Is Leap Day", each Date.IsLeapYear([Date]) and (Date.Month([Date]) = 2) and (Date.Day = 29), type logical),
+		LH3 = Table.AddColumn(LH2, "Is Weekday", each Date.DayOfWeek([Date], Day.Monday) <= 4, type logical),
+		LH4 = Table.AddColumn(LH3, "Is Weekend", each Date.DayOfWeek([Date], Day.Monday) >= 5, type logical),
+		// LH5 = Table.AddColumn(LH4, "Is Holiday", each if GetWebHolidays then [#"Holiday (GB-EAW)"] <> null else null, type logical),
+		LH5_GB_EAW = if not(GetWebHolidays) then LH2 else
+			Table.AddColumn(LH4, "Is Holiday (GB-EAW)", each [Holiday][GB_EAW] <> null, type logical),
+		// LH6 = Table.AddColumn(LH4_1, "Is Workday", each not [Is Holiday], type logical),
+		LH6_GB_EAW = if not(GetWebHolidays) then LH2 else
+			Table.AddColumn(LH5_GB_EAW, "Is Workday (GB-EAW)", each ([Holiday][GB_EAW] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
+		LHx = LH6_GB_EAW,
 
 		// Binary rolling //
 		RW1 = Table.AddColumn(LHx, "Is Rolling W-1", each Date.IsInPreviousNDays([Date], 7 * 2) and not Date.IsInPreviousNDays([Date], 7), type logical),
