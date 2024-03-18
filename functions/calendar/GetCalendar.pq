@@ -50,6 +50,8 @@
 | 		Add [Is Weekday/Weekend/Workday]
 | 		Add GB holiday source (web)
 |		Add parameter for web holiday source
+|	2024-03-18, 1.7.0
+|		Add [Relative Days/Weeks/Months/Quarters/Years]
 \*********************************************************/
 
 let GetCalendar = (
@@ -211,9 +213,18 @@ let GetCalendar = (
 		P2 = Table.AddColumn(P1, "P445 ##", each Text.PadStart(Text.From([#"P445 #"]), 2, "0"), type text),
 		P3 = Table.AddColumn(P2, "P445 @M", each "P445 " & [#"P445 ##"], type text),
 		P4 = Table.AddColumn(P3, "P445 Quarter @M", each "P445 Q" & Text.From([#"P445 Quarter #"]), type text),
+		Px = P4,
+
+		// Relative counts //
+		T1 = Table.AddColumn(Px, "Relative Days", each Duration.TotalDays([Date] - Today), Int64.Type),
+		T2 = Table.AddColumn(T1, "Relative Weeks", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), 7), 0), Int64.Type),
+		T3 = Table.AddColumn(T2, "Relative Months", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/12), 0), Int64.Type),
+		T4 = Table.AddColumn(T3, "Relative Quarters", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/4), 0), Int64.Type),
+		T5 = Table.AddColumn(T4, "Relative Years", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), 365.25), 0), Int64.Type),
+		Tx = T5,
 
 		// Bool to date //
-		LT1 = Table.AddColumn(P4, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
+		LT1 = Table.AddColumn(Tx, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
 		LT2 = Table.AddColumn(LT1, "Is to Date Month", each Date.IsInCurrentMonth([Date]) and [Date] <= Today, type logical),
 		LT3 = Table.AddColumn(LT2, "Is to Date Quarter", each Date.IsInCurrentQuarter([Date]) and [Date] <= Today, type logical),
 		LT4 = Table.AddColumn(LT3, "Is to Date Year", each Date.IsInCurrentYear([Date]) and [Date] <= Today, type logical),
