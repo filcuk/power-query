@@ -1,59 +1,69 @@
-/*********************************************************\
+/*************************************************************\
 | CALENDAR GENERATOR
-|
-|=--purpose----------------------------------------------=|
+|=-- purpose ------------------------------------------------=|
 | Generate a date table based on start and end dates.
+|
+|=-- parameters ---------------------------------------------=|
+|	#  Param			Req.	Default		Description
+| 	1. StartDate		x					From date, inclusive
+| 	2. EndDate			x					To date, inclusive
+| 	3. LangTag			-		en-GB		May affect formats
+| 	4. FirstWeekDay		-		Monday		First day of week
+| 	5. FinYearStartMo	-		7			Financial month start
+| 	6. GetWebHolidays	-		false		Web holiday sources ¹
+|
+| 	¹ Note that dependent fields will be disabled if false.
+|
+|=-- notes --------------------------------------------------=|
+| 	Fiel naming conventions:
+|  		%	   	Date type
+|  		#, ##	Number, padded number (as text)
+|  		Is ...	boolean
+| 		@M/L	Text short/full (e.g. Jan/January)
+| 		X-0, ±1	Current, next/previous period X
 | 
-|=--notes------------------------------------------------=|
-| LangTag examples: en-US, en-GB
-| Column naming:
-|  	%	   date
-|  	#, ##	number, padded number (text)
-|  	Is ...	boolean
-| 	@M/L	text shortenned/full (Jan/January)
-| 
-|=--credits----------------------------------------------=|
+|=-- credits ------------------------------------------------=|
 | Original 2014 by Matt Masson, mattmasson.com
 | Modified 2020 by Filip Kraus, filipkraus.net
 |
-|=--changelog--------------------------------------------=|
-| 	2023-04-06, 1.3.0
-| 		Add financial, ISO, calendar 4-4-5
-| 		Apply standardised column naming
-|	2023-05-11, 1.3.1
-|		Add 'Week @M'
-| 	2023-05-18, 1.4.0
-| 		Fix last date (EndDate) not being generated
-| 		Add forward-looking bool columns
-| 	2023-05-22, 1.4.1
-| 		Add ISO week formats ##, @M
-|	2023-05-25, 1.5.0
-| 		Add Period 445 formats ##, @M
-| 	2023-08-03, 1.5.1
-|		Add Quarter @M, @L
-| 	2023-08-23, 1.5.2
-| 		Add [Day & Weekday @M]
-| 		Fix [Day of Week ##] showing day of month
-| 	2023-10-13, 1.5.3
-|		Change [ISO Week Year #] to [ISO Year #]
-| 		Add [ISO Week Year #] as YYYYWW, [Month Year #], [Month Year @M]
-|	2023-10-26, 1.5.4
-| 		Add [Date is Before Today], [Date is After Today]
+|=-- changelog ----------------------------------------------=|
+|	2024-03-18, 1.7.0
+|		Add [Relative Days/Weeks/Months/Quarters/Years]
+|		Add [Is Leap Year/Day]
+|	2024-03-13, 1.6.0
+| 		Add [Is Weekday/Weekend/Workday]
+| 		Add GB holiday web source (optional, by parameter)
+| 	2023-12-11, 1.5.6
+|		Add [Is ≤ Today], [Is ≥ Today]
+|		Change field names [Is < Today], [Is > Today]
 | 	2023-10-30, 1.5.5
 | 		Add [Week Year #, #M, @M, @L]
 | 		Fix [Day of Week #] not using FirstWeekDay parameter
 | 		Remove [Day of Week ##]
-| 	2023-12-11, 1.5.6
-|		Add [Is ≤ Today], [Is ≥ Today]
-|		Change field names [Is < Today], [Is > Today]
-|	2024-03-13, 1.6.0
-| 		Add [Is Weekday/Weekend/Workday]
-| 		Add GB holiday source (web)
-|		Add parameter for web holiday source
-|	2024-03-18, 1.7.0
-|		Add [Relative Days/Weeks/Months/Quarters/Years]
-|		Add [Is Leap Year], [Is Leap Day]
-\*********************************************************/
+|	2023-10-26, 1.5.4
+| 		Add [Date is Before Today], [Date is After Today]
+| 	2023-10-13, 1.5.3
+|		Change [ISO Week Year #] to [ISO Year #]
+| 		Add [ISO Week Year #] as YYYYWW, [Month Year #], [Month Year @M]
+| 	2023-08-23, 1.5.2
+| 		Add [Day & Weekday @M]
+| 		Fix [Day of Week ##] showing day of month
+| 	2023-08-03, 1.5.1
+|		Add Quarter @M, @L
+|	2023-05-25, 1.5.0
+| 		Add Period 445 formats ##, @M
+| 	2023-05-22, 1.4.1
+| 		Add ISO week formats ##, @M
+| 	2023-05-18, 1.4.0
+| 		Fix last date (EndDate) not being generated
+| 		Add forward-looking bool columns
+|	2023-05-11, 1.3.1
+|		Add 'Week @M'
+| 	2023-04-06, 1.3.0
+| 		Add financial, ISO, calendar 4-4-5
+| 		Apply standardised column naming
+| 
+\*************************************************************/
 
 let GetCalendar = (
 	StartDate as date,
