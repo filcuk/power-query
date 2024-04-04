@@ -96,7 +96,7 @@ let
 					RenamedColumns = Table.RenameColumns(ChangedType,{{"Column1", "Date"}}),
 					Cal = RenamedColumns,
 
-					// GB holidays - England & Wales //
+					// Holidays - GB //
 					Holidays =  if not UseWebSources then Cal else let
 						HolidaysGB = let
 							Source = Json.Document(Web.Contents("https://www.gov.uk/bank-holidays.json")),
@@ -106,13 +106,11 @@ let
 							ReplaceList = [#"england-and-wales" = "GB_EAW", #"scotland" = "GB_SCT", #"northern-ireland" = "GB_NIR"],
 							ReplaceCountry = Table.TransformColumns(ExpandRecs, {{"Country", each Record.FieldOrDefault(ReplaceList, _, _)}}),
 							ExpandEvents = Table.ExpandRecordColumn(Table.ExpandListColumn(ReplaceCountry, "Events"), "Events", {"date", "title"}, {"Date", "Title"}),
-							// Group = Table.Group(ExpandEvents, {"Date"}, {{"Holiday", each [[Country], [Title]], type table [Country=text, Title=text]}}),
 							Group = Table.Group(ExpandEvents, {"Date"}, {{"Holiday", each Table.ToRecords(Table.PromoteHeaders(Table.Transpose([[Country], [Title]]))){0}, type record}}),
 							Type = Table.TransformColumnTypes(Group,{{"Date", type date}})
 
 						in
 							Type,
-						// Join = Table.NestedJoin(Cal, {"Date"}, Table.SelectRows(HolidaysGB, each [country] = "GB-EAW"), {"date"}, "holidays-gb", JoinKind.LeftOuter),
 						Join = Table.NestedJoin(Cal, {"Date"}, HolidaysGB, {"Date"}, "HolidayTable", JoinKind.LeftOuter),
 						Expand = Table.ExpandTableColumn(Join, "HolidayTable", {"Holiday"}, {"Holiday"})
 					in
