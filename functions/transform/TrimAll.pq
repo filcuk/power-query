@@ -1,5 +1,5 @@
 /*********************************************************\
-|  TRIM ALL
+|  FULL TRIM
 |
 |=--purpose----------------------------------------------=|
 | Trim spaces around *and* in between text efficiently.
@@ -15,7 +15,7 @@
 \*********************************************************/
 
 let
-    TrimAll =
+    TrimFull =
         let
             Function = (Input as text) as any =>
                 let
@@ -34,14 +34,14 @@ let
 				])
 				) as any
                 meta [
-                    Documentation.Name = "TrimAll",
+                    Documentation.Name = "TrimFull",
                     Documentation.LongDescription = "Trim spaces around and in between text.",
                     Documentation.Examples = {
-                        [Description = "Simple Switch expression", Code = "TrimAll("" This  has    extra spaces   "")", Result = """This has extra spaces"""]
+                        [Description = "", Code = "TrimFull("" This  has    extra spaces   "")", Result = """This has extra spaces"""]
                     }
                 ],
             TypedFunction = Value.ReplaceType(Function, FunctionType)
         in
             TypedFunction
 in
-    TrimAll
+    TrimFull
