@@ -1,0 +1,40 @@
+/*********************************************************\
+| GET SHAREPOINT LIST ITEM COMMENTS
+|
+|=--purpose----------------------------------------------=|
+| Return table of comments for a given list item.
+| 
+|=--credits----------------------------------------------=|
+| Original 2024 by Filip Kraus, filipkraus.net
+|
+|=--changelog--------------------------------------------=|
+| 	2024-05-16, 1.0.0
+| 		Initial
+\*********************************************************/
+
+let
+	ListComments = (
+		SiteURL as text,
+		ListGUID as text,
+		ItemID as number
+	) as any =>
+	let
+		Source = Xml.Tables(Web.Contents(SiteURL & "/_api/web/lists(guid'" & ListGUID & "')/" & "GetItemById(" & Text.From(ItemID) & ")/Comments")),
+		entry = try Source{0}[entry] otherwise null,
+		Sub = if entry = null then null else let
+			Content = Table.SelectColumns(entry,{"content"}),
+			Combine1 = Table.Combine(Content[content]),
+			Combine2 = Table.Combine(Combine1[#"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"]),
+			Combine3 = Table.Combine(Combine2[properties]),
+			Combine4 = Table.Combine(Combine3[#"http://schemas.microsoft.com/ado/2007/08/dataservices"]),
+			ExtractComment = Table.AddColumn(Combine4, "Comment", each try [text]{0}[#"Element:Text"] otherwise [text], type text),
+			ExpandAuthor = Table.ExpandTableColumn(ExtractComment, "author", {"name"}, {"Author"}),
+			ExpandCreated = Table.ExpandTableColumn(ExpandAuthor, "createdDate", {"Element:Text"}, {"Created"}),
+			Renamed = Table.RenameColumns(ExpandCreated,{{"id", "Comment ID"}}),
+			KeepCols = Table.SelectColumns(Renamed,{"Comment ID", "Author", "Created", "Comment"})
+		in
+			KeepCols
+	in
+		Sub
+in
+	ListComments
