@@ -13,11 +13,9 @@
 | 		@M/L	Text short/full (e.g. Jan/January)
 | 		X-0, ±1	Current, next/previous period X
 | 
-|=-- credits ------------------------------------------------=|
-| Original 2014 by Matt Masson, mattmasson.com
-| Modified 2020 by Filip Kraus, filipkraus.net
-|
 |=-- changelog ----------------------------------------------=|
+|	2024-05-23, 2.0.1
+|		Fix relative years skipped in steps
 |	2024-04-03, 2.0.0
 | 		Add built-in documentation
 | 		Change default date to UTC
@@ -284,7 +282,7 @@ let
 					LYx = LY5,
 
 					LH1 = Table.AddColumn(LYx, "Is Leap Year", each Date.IsLeapYear([Date]), type logical),
-					LH2 = Table.AddColumn(LY1, "Is Leap Day", each Date.IsLeapYear([Date]) and (Date.Month([Date]) = 2) and (Date.Day = 29), type logical),
+					LH2 = Table.AddColumn(LH1, "Is Leap Day", each Date.IsLeapYear([Date]) and (Date.Month([Date]) = 2) and (Date.Day = 29), type logical),
 					LH3 = Table.AddColumn(LH2, "Is Weekday", each Date.DayOfWeek([Date], Day.Monday) <= 4, type logical),
 					LH4 = Table.AddColumn(LH3, "Is Weekend", each Date.DayOfWeek([Date], Day.Monday) >= 5, type logical),
 					// LH5 = Table.AddColumn(LH4, "Is Holiday", each if UseWebSources then [#"Holiday (GB-EAW)"] <> null else null, type logical),
