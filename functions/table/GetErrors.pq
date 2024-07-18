@@ -9,12 +9,12 @@
 | Modified 2023 by Filip Kraus, filipkraus.net
 |
 |=--changelog--------------------------------------------=|
-| 	2023-08-01, 1.0.0
-| 		Initial
-|   2023-11-15, 1.1.0
-|       Fix Excel formula errors showing as null
 |   2024-01-25, 1.2.0
 |       Add parameter to allow returning full table
+|   2023-11-15, 1.1.0
+|       Fix Excel formula errors showing as null
+| 	2023-08-01, 1.0.0
+| 		Initial
 \*********************************************************/
 
 (Table as table, ReturnAll as logical) as table =>
@@ -26,35 +26,39 @@
 
         errorToText = (errorRec as any) as any =>
             if Type.Is(Value.Type(errorRec), Record.Type)
-            then "Reason: " & errorRec[Reason] & "#(lf)Message: " & errorRec[Message] & "#(lf)Value: " & (
-                if errorRec[Detail] is null then "null" else
-                try Text.From(errorRec[Detail])
-                otherwise try Text.From(errorRec[Detail][Value])
-                otherwise null
+            then "Reason: " & errorRec[Reason]
+            & "#(lf)Message: " & errorRec[Message]
+            & "#(lf)Value: " & (
+                if errorRec[Detail] is null then "null"
+                else
+                    try Text.From(errorRec[Detail])
+                    otherwise try Text.From(errorRec[Detail][Value])
+                    otherwise null
             )
+            // Return other values
             else errorRec,
 
         recsToErrors = (rec as record) as any =>
             List.Accumulate(
                 Record.FieldNames(rec), [], (s, c) => 
-                    Record.AddField(s, c, errorToText(errorExtract(try Record.Field(rec, c)))) 
+                    Record.AddField(s, c, 
+                        errorToText(
+                            errorExtract(try Record.Field(rec, c))
+                        )
+                    ) 
             ),
 
         OutputErrors = 
             Table.FromList(
                 List.Transform(
-                    Table.ToRecords(
-                        Table.SelectRowsWithErrors(Table)
-                    ), each recsToErrors(_)
+                    Table.ToRecords(Table.SelectRowsWithErrors(Table)), each recsToErrors(_)
                 ), Record.FieldValues, Table.ColumnNames(Table)
             ),
         
         OutputAll = 
             Table.FromList(
                 List.Transform(
-                    Table.ToRecords(
-                        Table
-                    ), each recsToErrors(_)
+                    Table.ToRecords(Table), each recsToErrors(_)
                 ), Record.FieldValues, Table.ColumnNames(Table)
             ),
         
