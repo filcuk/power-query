@@ -14,6 +14,10 @@
 | 		X-0, ±1	Current, next/previous period X
 | 
 |=-- changelog ----------------------------------------------=|
+|	2024-08-16, 2.2.0
+|		Change [P445 @M] from 'P445 ##' to 'Period ##'
+|	2024-08-09, 2.1.0
+|		Add a variation (B) of the 4-4-5 calendar
 |	2024-05-23, 2.0.1
 |		Fix relative years skipped in steps
 |	2024-04-03, 2.0.0
@@ -214,18 +218,45 @@ let
 								{(x)=>x<44, [P=10,Q=4]}, 
 								{(x)=>x<48, [P=11,Q=4]}, 
 								{(x)=>true, [P=12,Q=4]} 
+							},
+						Result = List.First(List.Select(Periods, each _{0}(WeekNo))){1}
+					in 
+						Result,
+					PA1 = Table.ExpandRecordColumn(Table.AddColumn(IH0, "Calendar445", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P", "Q"}, {"P445 #", "P445 Quarter #"}),
+					PA2 = Table.AddColumn(PA1, "P445 ##", each Text.PadStart(Text.From([#"P445 #"]), 2, "0"), type text),
+					PA3 = Table.AddColumn(PA2, "P445 @M", each "Period " & [#"P445 ##"], type text),
+					PA4 = Table.AddColumn(PA3, "P445 Quarter @M", each "Period Q" & Text.From([#"P445 Quarter #"]), type text),
+					PAx = PA4,
+
+					// Calendar 4-4-5 x 4-5-4 //
+					// Periods: 4-4-5, 4-4-5, 4-5-4, 4-5-4
+					Calendar445B = (WeekNo) => let 
+						Periods = 
+							{ 
+								{(x)=>x< 5, [P=1, Q=1]}, 
+								{(x)=>x< 9, [P=2, Q=1]}, 
+								{(x)=>x<14, [P=3, Q=1]}, 
+								{(x)=>x<18, [P=4, Q=2]}, 
+								{(x)=>x<22, [P=5, Q=2]}, 
+								{(x)=>x<27, [P=6, Q=2]}, 
+								{(x)=>x<31, [P=7, Q=3]}, 
+								{(x)=>x<36, [P=8, Q=3]}, 
+								{(x)=>x<40, [P=9, Q=3]}, 
+								{(x)=>x<44, [P=10,Q=4]}, 
+								{(x)=>x<49, [P=11,Q=4]}, 
+								{(x)=>true, [P=12,Q=4]} 
 							}, 
 						Result = List.First(List.Select(Periods, each _{0}(WeekNo))){1}
 					in 
 						Result,
-					P1 = Table.ExpandRecordColumn(Table.AddColumn(IH0, "Calendar445", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P", "Q"}, {"P445 #", "P445 Quarter #"}),
-					P2 = Table.AddColumn(P1, "P445 ##", each Text.PadStart(Text.From([#"P445 #"]), 2, "0"), type text),
-					P3 = Table.AddColumn(P2, "P445 @M", each "P445 " & [#"P445 ##"], type text),
-					P4 = Table.AddColumn(P3, "P445 Quarter @M", each "P445 Q" & Text.From([#"P445 Quarter #"]), type text),
-					Px = P4,
+					PB1 = Table.ExpandRecordColumn(Table.AddColumn(PAx, "Calendar445B", each Calendar445([#"ISO Week #"]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445B", {"P", "Q"}, {"P445B #", "P445B Quarter #"}),
+					PB2 = Table.AddColumn(PB1, "P445B ##", each Text.PadStart(Text.From([#"P445B #"]), 2, "0"), type text),
+					PB3 = Table.AddColumn(PB2, "P445B @M", each "Period B " & [#"P445B ##"], type text),
+					PB4 = Table.AddColumn(PB3, "P445B Quarter @M", each "Period B Q" & Text.From([#"P445B Quarter #"]), type text),
+					PBx = PB4,
 
 					// Relative counts //
-					T1 = Table.AddColumn(Px, "Relative Days", each Duration.TotalDays([Date] - Today), Int64.Type),
+					T1 = Table.AddColumn(PBx, "Relative Days", each Duration.TotalDays([Date] - Today), Int64.Type),
 					T2 = Table.AddColumn(T1, "Relative Weeks", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), 7), 0), Int64.Type),
 					T3 = Table.AddColumn(T2, "Relative Months", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/12), 0), Int64.Type),
 					T4 = Table.AddColumn(T3, "Relative Quarters", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/4), 0), Int64.Type),
