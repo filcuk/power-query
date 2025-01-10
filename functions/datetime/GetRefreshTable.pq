@@ -1,20 +1,15 @@
-/*********************************************************\
-| REFRESH GENERATOR
-|
-|=--purpose----------------------------------------------=|
-| Generate a table with refresh and client information.
-| 
-|=--credits----------------------------------------------=|
-| Original 2023 by Filip Kraus, filipkraus.net
-|
-|=--changelog--------------------------------------------=|
-| 	2023-05-18  1.0.0   Initial 
-|   2024-09-26  1.1.0   Improve column names
-|                       Add summer time calculation
-|						Add custom time zone option
-| 						Add ouput types
-| 						Add documentation
-\*********************************************************/
+/*/ REFRESH TABLE \**************************************\
+|  Generate a table with refresh and client information.  |
+|-[ author ]----------------------------------------------|
+|  2023, Filip Kraus, contact@filipkraus.net              |
+|-[ changelog ]-------------------------------------------|
+|  2024-09-26  1.1.0  Improve column names
+|                     Add summer time calculation
+|                     Add custom time zone option
+|                     Add output types
+|                     Add documentation
+|  2023-05-18  1.0.0  Initial
+\*/
 
 let GetRefreshTable = 
 	let Function = (

@@ -1,67 +1,52 @@
-/*************************************************************\
-|   _____     _     _      _____  _   _  ____     _     ____  
-|  / ____|   / \   | |    | ____|| \ | ||  _ \   / \   |  _ \ 
-|  | |      / _ \  | |    |  _|  |  \| || | | | / _ \  | |_) |
-|  | |___  / ___ \ | |___ | |___ | |\  || |_| |/ ___ \ |  _ < 
-|  \_____|/_/   \_\|_____||_____||_| \_||____//_/   \_\|_| \_\
+/*/ CALENDAR TABLE \**************************************\
+|   _____     _    _      _____  _   _  ____     _    ____  
+|  / ____|   / \  | |    | ____|| \ | ||  _ \   / \  |  _ \ 
+|  | |      / _ \ | |    |  _|  |  \| || | | | / _ \ | |_) |
+|  | |___  / ___ \| |___ | |___ | |\  || |_| |/ ___ \|  _ < 
+|  \_____|/_/   \_|_____||_____||_| \_||____//_/   \_|_| \_\
 | 
-|=-- notes --------------------------------------------------=|
-| 	Fiel naming conventions:
-|  		%	   	Date type
-|  		#, ##	Number, padded number (as text)
-|  		Is ...	boolean
-| 		@M/L	Text short/full (e.g. Jan/January)
-| 		X-0, ±1	Current, next/previous period X
-| 
-|=-- changelog ----------------------------------------------=|
-|	2024-08-16, 2.2.0
-|		Change [P445 @M] from 'P445 ##' to 'Period ##'
-|	2024-08-09, 2.1.0
-|		Add a variation (B) of the 4-4-5 calendar
-|	2024-05-23, 2.0.1
-|		Fix relative years skipped in steps
-|	2024-04-03, 2.0.0
-| 		Add built-in documentation
-| 		Change default date to UTC
-| 		Change date params to optional with default to week running
-| 		Change CultureCode default to Culture.Current
-|	2024-03-18, 1.7.0
-|		Add [Relative Days/Weeks/Months/Quarters/Years]
-|		Add [Is Leap Year/Day]
-|	2024-03-13, 1.6.0
-| 		Add [Is Weekday/Weekend/Workday]
-| 		Add GB holiday web source (optional, by parameter)
-| 	2023-12-11, 1.5.6
-|		Add [Is ≤ Today], [Is ≥ Today]
-|		Change field names [Is < Today], [Is > Today]
-| 	2023-10-30, 1.5.5
-| 		Add [Week Year #, #M, @M, @L]
-| 		Fix [Day of Week #] not using FirstWeekDay parameter
-| 		Remove [Day of Week ##]
-|	2023-10-26, 1.5.4
-| 		Add [Date is Before Today], [Date is After Today]
-| 	2023-10-13, 1.5.3
-|		Change [ISO Week Year #] to [ISO Year #]
-| 		Add [ISO Week Year #] as YYYYWW, [Month Year #], [Month Year @M]
-| 	2023-08-23, 1.5.2
-| 		Add [Day & Weekday @M]
-| 		Fix [Day of Week ##] showing day of month
-| 	2023-08-03, 1.5.1
-|		Add Quarter @M, @L
-|	2023-05-25, 1.5.0
-| 		Add Period 445 formats ##, @M
-| 	2023-05-22, 1.4.1
-| 		Add ISO week formats ##, @M
-| 	2023-05-18, 1.4.0
-| 		Fix last date (EndDate) not being generated
-| 		Add forward-looking bool columns
-|	2023-05-11, 1.3.1
-|		Add 'Week @M'
-| 	2023-04-06, 1.3.0
-| 		Add financial, ISO, calendar 4-4-5
-| 		Apply standardised column naming
-| 
-\*************************************************************/
+|  Generate a table with refresh and client information.  |
+|-[ usage ]-----------------------------------------------|
+|  Field naming:                                          |
+|    %      Date type                                     |
+|  	 #, ##  Number, padded number (as text)               |
+|    Is ... boolean                                       |
+|    @M/L   Text short/full (e.g. Jan/January)            |
+|    X-0/±1 Current, next/previous period X               |
+|-[ author ]----------------------------------------------|
+|  2014, Matt Masson, mattmasson.com                      |
+|  2023, Filip Kraus, contact@filipkraus.net              |
+|-[ changelog ]-------------------------------------------|
+|  2024-08-16  2.2.0  Change [P445 @M] from 'P445 ##' to 'Period ##'
+|  2024-08-09  2.1.0  Add a variation (B) of the 4-4-5 calendar
+|  2024-05-23  2.0.1  Fix relative years skipped in steps
+|  2024-04-03  2.0.0  Add built-in documentation
+|                     Change default date to UTC
+|                     Change date params to optional with a week running default
+|                     Change CultureCode default to Culture.Current
+|  2024-03-18  1.7.0  Add [Relative Days/Weeks/Months/Quarters/Years]
+|                     Add [Is Leap Year/Day]
+|  2024-03-13  1.6.0  Add [Is Weekday/Weekend/Workday]
+|                     Add GB holiday web source (optional  by parameter)
+|  2023-12-11  1.5.6  Add [Is ≤ Today], [Is ≥ Today]
+|                     Change field names [Is < Today], [Is > Today]
+|  2023-10-30  1.5.5  Add [Week Year #, #M, @M, @L]
+|                     Fix [Day of Week #] not using FirstWeekDay parameter
+|                     Remove [Day of Week ##]
+|  2023-10-26  1.5.4  Add [Date is Before Today], [Date is After Today]
+|  2023-10-13  1.5.3  Change [ISO Week Year #] to [ISO Year #]
+|                     Add [ISO Week Year #] as YYYYWW, [Month Year #], [Month Year @M]
+|  2023-08-23  1.5.2  Add [Day & Weekday @M]
+|                     Fix [Day of Week ##] showing day of month
+|  2023-08-03  1.5.1  Add Quarter @M, @L
+|  2023-05-25  1.5.0  Add Period 445 formats ##, @M
+|  2023-05-22  1.4.1  Add ISO week formats ##, @M
+|  2023-05-18  1.4.0  Fix last date (EndDate) not being generated
+|                     Add forward-looking bool columns
+|  2023-05-11  1.3.1  Add 'Week @M'
+|  2023-04-06  1.3.0  Add financial, ISO, calendar 4-4-5
+|                     Apply standardised column naming
+\*/
 
 let
 	Calendar = 
