@@ -1,20 +1,13 @@
-/*********************************************************\
-| GET DATAFLOW
-|
-|=--purpose----------------------------------------------=|
-| PQ equivalent switch function to DAX
-| 
-|=--notes------------------------------------------------=|
-| Does not support environments
-|  
-|=--credits----------------------------------------------=|
-| Original	2024, Filip Kraus, filipkraus.net
-|
-|=--changelog--------------------------------------------=|
-| 	2024-09-17  1.0.0   Initial
-|   2024-09-27  1.1.0   Add table parameter
-|
-\*********************************************************/
+/*/ GET DATAFLOW \****************************************\
+|  Retrieve dataflow objects in a single call.            |
+|-[ usage ]-----------------------------------------------|
+|  Does not support environment dataflow storage.         |
+|-[ author ]----------------------------------------------|
+|  2024, Filip Kraus, contact@filipkraus.net              |
+|-[ changelog ]-------------------------------------------|
+|  2024-09-27  1.1.0  Add table parameter
+|  2024-09-17  1.0.0  Initial
+\*/
 
 let
     GetDataflow =

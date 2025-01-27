@@ -6,7 +6,7 @@
 | 
 |=--credits----------------------------------------------=|
 | Original	2023, Rick De Groot, gorilla.bi
-| Current	2024, Filip Kraus, filipkraus.net
+| Current	2024, Filip Kraus, contact@filipkraus.net
 |
 |=--changelog--------------------------------------------=|
 | 	2024-04-04, 1.0.0

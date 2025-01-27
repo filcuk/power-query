@@ -6,7 +6,7 @@
 | Output: 13:30, 03:30
 |
 |=--credits----------------------------------------------=|
-| Original 2023 by Filip Kraus, filipkraus.net
+| Original 2023 by Filip Kraus, contact@filipkraus.net
 |
 |=--changelog--------------------------------------------=|
 | 	2023-06-13

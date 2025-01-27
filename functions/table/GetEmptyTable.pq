@@ -9,7 +9,7 @@
 | measure: `placeholder3 = 0`. Change param to true.
 | 
 |=--credits----------------------------------------------=|
-| Original 2023 by Filip Kraus, filipkraus.net
+| Original 2023 by Filip Kraus, contact@filipkraus.net
 |
 \*********************************************************/
 

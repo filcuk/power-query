@@ -5,7 +5,7 @@
 | Use Text.Clean() to clean table headers.
 | 
 |=--credits----------------------------------------------=|
-| Original 2023 by Filip Kraus, filipkraus.net
+| Original 2023 by Filip Kraus, contact@filipkraus.net
 |
 |=--changelog--------------------------------------------=|
 | 	2023-07-26

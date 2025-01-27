@@ -14,7 +14,7 @@
 |=--credits----------------------------------------------=|
 | Original: https://community.powerbi.com/t5/Community-Blog/Dynamically-Detect-Column-Types-with-Power-M/ba-p/1682639
 | 2021, Steve de Peijper, linkedin.com/in/stevedep/
-| 2023, Filip Kraus, filipkraus.net
+| 2023, Filip Kraus, contact@filipkraus.net
 |
 |=--changelog--------------------------------------------=|
 | 

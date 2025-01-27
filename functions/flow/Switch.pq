@@ -8,7 +8,7 @@
 | 
 |=--credits----------------------------------------------=|
 | Original	2014, Daniil Maslyuk, xxlbi.com
-| Current	2023, Filip Kraus, filipkraus.net
+| Current	2023, Filip Kraus, contact@filipkraus.net
 |
 |=--changelog--------------------------------------------=|
 | 	2023-12-21, 1.0.0

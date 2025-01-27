@@ -6,7 +6,7 @@
 | 
 |=--credits----------------------------------------------=|
 | Original https://community.fabric.microsoft.com/t5/Power-Query/List-all-errors-in-a-table/td-p/1470730
-| Modified 2023 by Filip Kraus, filipkraus.net
+| Modified 2023 by Filip Kraus, contact@filipkraus.net
 |
 |=--changelog--------------------------------------------=|
 |   2024-01-25, 1.2.0

@@ -3,7 +3,7 @@
 |
 |=--credits----------------------------------------------=|
 | Original 2022 by Damian (comments), blog.crossjoin.co.uk
-| Modified 2023 by Filip Kraus, filipkraus.net
+| Modified 2023 by Filip Kraus, contact@filipkraus.net
 |
 |=--changelog--------------------------------------------=|
 | 	2023-05-31
