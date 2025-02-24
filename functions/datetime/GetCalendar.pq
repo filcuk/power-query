@@ -17,6 +17,7 @@
 |  2014, Matt Masson, mattmasson.com                      |
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
+|  2025-02-24  2.2.1  Fix relative fields not sticking to their period
 |  2024-08-16  2.2.0  Change [P445 @M] from 'P445 ##' to 'Period ##'
 |  2024-08-09  2.1.0  Add a variation (B) of the 4-4-5 calendar
 |  2024-05-23  2.0.1  Fix relative years skipped in steps
@@ -242,10 +243,10 @@ let
 
 					// Relative counts //
 					T1 = Table.AddColumn(PBx, "Relative Days", each Duration.TotalDays([Date] - Today), Int64.Type),
-					T2 = Table.AddColumn(T1, "Relative Weeks", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), 7), 0), Int64.Type),
-					T3 = Table.AddColumn(T2, "Relative Months", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/12), 0), Int64.Type),
-					T4 = Table.AddColumn(T3, "Relative Quarters", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/4), 0), Int64.Type),
-					T5 = Table.AddColumn(T4, "Relative Years", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), 365.25), 0), Int64.Type),
+					T2 = Table.AddColumn(T1, "Relative Weeks", each (Date.Year([Date]) * 52 + Date.WeekOfYear([Date])) - (Date.Year(Today) * 52 + Date.WeekOfYear(Today)), Int64.Type),
+					T3 = Table.AddColumn(T2, "Relative Months", each (Date.Year([Date]) * 12 + Date.Month([Date])) - (Date.Year(Today) * 12 + Date.Month(Today)), Int64.Type),
+					T4 = Table.AddColumn(T3, "Relative Quarters", each (Date.Year([Date]) * 4 + Date.QuarterOfYear([Date])) - (Date.Year(Today) * 4 + Date.QuarterOfYear(Today)), Int64.Type),
+					T5 = Table.AddColumn(T4, "Relative Years", each Date.Year([Date]) - Date.Year(Today), Int64.Type),
 					Tx = T5,
 
 					// Bool to date //
