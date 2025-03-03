@@ -17,6 +17,7 @@
 |  2014, Matt Masson, mattmasson.com                      |
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
+|  2025-02-28  2.2.2  Add previous relative calcs as rolling fields
 |  2025-02-24  2.2.1  Fix relative fields not sticking to their period
 |  2024-08-16  2.2.0  Change [P445 @M] from 'P445 ##' to 'Period ##'
 |  2024-08-09  2.1.0  Add a variation (B) of the 4-4-5 calendar
@@ -247,7 +248,12 @@ let
 					T3 = Table.AddColumn(T2, "Relative Months", each (Date.Year([Date]) * 12 + Date.Month([Date])) - (Date.Year(Today) * 12 + Date.Month(Today)), Int64.Type),
 					T4 = Table.AddColumn(T3, "Relative Quarters", each (Date.Year([Date]) * 4 + Date.QuarterOfYear([Date])) - (Date.Year(Today) * 4 + Date.QuarterOfYear(Today)), Int64.Type),
 					T5 = Table.AddColumn(T4, "Relative Years", each Date.Year([Date]) - Date.Year(Today), Int64.Type),
-					Tx = T5,
+					// Relative counts rolling //
+					T6 = Table.AddColumn(T5, "Relative Weeks Rolling", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), 7), 0), Int64.Type),
+					T7 = Table.AddColumn(T6, "Relative Months Rolling", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/12), 0), Int64.Type),
+					T8 = Table.AddColumn(T7, "Relative Quarters Rolling", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/4), 0), Int64.Type),
+					T9 = Table.AddColumn(T8, "Relative Years Rolling", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), 365.25), 0), Int64.Type),
+					Tx = T9,
 
 					// Bool to date //
 					LT1 = Table.AddColumn(Tx, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
