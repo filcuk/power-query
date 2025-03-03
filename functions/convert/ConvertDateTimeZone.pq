@@ -1,18 +1,13 @@
-/*********************************************************\
-| TIME ZONE CONVERTER WITH DST SUPPORT
-|
-|=--credits----------------------------------------------=|
-| Original 2022 by Damian (comments), blog.crossjoin.co.uk
-| Modified 2023 by Filip Kraus, contact@filipkraus.net
-|
-|=--changelog--------------------------------------------=|
-| 	2023-05-31
-| 		Initial
-|   2023-06-29
-|       Add CET/CEST
-|       Add static DST timezone conversions
-| 
-\*********************************************************/
+/*/ TZ CONVERTER \****************************************\
+| Time zone converter with DST support                     |
+|-[ author ]----------------------------------------------|
+| 2022, Damian (comments), blog.crossjoin.co.uk           |
+| 2023, Filip Kraus,       contact@filipkraus.net         |
+|-[ changelog ]-------------------------------------------|
+|  2023-05-31   1.0.0   Initial
+|  2023-06-29   1.1.0   Add CET/CEST
+|                       Add static DST TZ conversions 
+\*/
 
 let
     ConvertDateTimeZone = (

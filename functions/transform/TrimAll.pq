@@ -1,18 +1,11 @@
-/*********************************************************\
-|  FULL TRIM
-|
-|=--purpose----------------------------------------------=|
-| Trim spaces around *and* in between text efficiently.
-| 
-|=--credits----------------------------------------------=|
-| Original	2023, Rick De Groot, gorilla.bi
-| Current	2024, Filip Kraus, contact@filipkraus.net
-|
-|=--changelog--------------------------------------------=|
-| 	2024-04-04, 1.0.0
-|		Initial 
-|
-\*********************************************************/
+/*/ FULL TRIM \*******************************************\
+| Trim spaces around *and* in between text efficiently.   |
+|-[ author ]----------------------------------------------|
+| 2023, Rick De Groot,  gorilla.bi                        |
+| 2024, Filip Kraus,    contact@filipkraus.net            |
+|-[ changelog ]-------------------------------------------|
+| 2024-04-04  1.0.0   Initial
+\*/
 
 let
     TrimFull =
