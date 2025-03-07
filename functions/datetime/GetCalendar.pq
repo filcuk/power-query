@@ -17,6 +17,7 @@
 |  2014, Matt Masson, mattmasson.com                      |
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
+|  2025-03-07  2.2.1  Add [Relative Month of Year] field
 |  2025-02-28  2.2.2  Add previous relative calcs as rolling fields
 |  2025-02-24  2.2.1  Fix relative fields not sticking to their period
 |  2024-08-16  2.2.0  Change [P445 @M] from 'P445 ##' to 'Period ##'
@@ -255,8 +256,12 @@ let
 					T9 = Table.AddColumn(T8, "Relative Years Rolling", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), 365.25), 0), Int64.Type),
 					Tx = T9,
 
+					// Ralative counts calendar //
+					U1 = Table.AddCOlumn(Tx, "Relative Month of Year", each Date.Month([Date]) - Date.Month(Today), Int64.Type),
+					Ux = U1,
+
 					// Bool to date //
-					LT1 = Table.AddColumn(Tx, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
+					LT1 = Table.AddColumn(Ux, "Is to Date Week", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
 					LT2 = Table.AddColumn(LT1, "Is to Date Month", each Date.IsInCurrentMonth([Date]) and [Date] <= Today, type logical),
 					LT3 = Table.AddColumn(LT2, "Is to Date Quarter", each Date.IsInCurrentQuarter([Date]) and [Date] <= Today, type logical),
 					LT4 = Table.AddColumn(LT3, "Is to Date Year", each Date.IsInCurrentYear([Date]) and [Date] <= Today, type logical),
