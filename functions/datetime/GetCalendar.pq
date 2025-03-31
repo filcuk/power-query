@@ -55,17 +55,17 @@
 |                     Apply standardised column naming
 \*/
 
-let
-	Calendar = let 
-		Function = (
-			optional StartDate as date,
-			optional EndDate as date,
-			optional CultureCode as nullable text,
-			optional FirstWeekDay as nullable number,
-			optional FinYearStartMo as nullable number,
-			optional UseWebSources as nullable logical,
-			optional CurrentDate as nullable date
-		) as table => let
+let Calendar = 
+	let Function = (
+		optional StartDate as date,
+		optional EndDate as date,
+		optional CultureCode as nullable text,
+		optional FirstWeekDay as nullable number,
+		optional FinYearStartMo as nullable number,
+		optional UseWebSources as nullable logical,
+		optional CurrentDate as nullable date
+	) as table => 
+		let
 			// Variables //
 			Today = if CurrentDate <> null then CurrentDate else Date.From(DateTimeZone.UtcNow()),
 			RollYear = Number.Round(365.25, 0),
@@ -410,8 +410,7 @@ let
 				Documentation.FieldDescription = "Allows explicit definition of current date",
 				Documentation.SampleValues = {Date.From(DateTimeZone.UtcNow())}
 			])
-			) as any
-			meta [
+			) as any meta [
 				Documentation.Name = "Calendar",
 				Documentation.LongDescription = "Returns a Calendar table.",
 				Documentation.Examples = {
