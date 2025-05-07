@@ -6,7 +6,7 @@
 |  \_____|/_/   \_|_____||_____||_| \_||____//_/   \_|_| \_\
 | 
 |-[ usage ]-----------------------------------------------|
-|  Colum reference                                        |
+|  Colum reference tags                                   |
 |    Abbr: Abbreviated form (Mon)                         |
 |    Comp: Composite number (202501)                      |
 |    Padd: Number padded with leading zeros (01)          |
@@ -15,6 +15,10 @@
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |  2014, Matt Masson, mattmasson.com                      |
 |-[ changelog ]-------------------------------------------|
+|  2025-05-07  3.1.0  Add [ISO Week & Side*]
+|                     Change names to include tags at the end
+|                     Improve compatibility of [Day & Ordinal] (thanks Asma)
+|                     Fix issue with [Week Side] for first/last week of year
 |  2025-03-28  3.0.0  Change column names to be more user-friendly
 |                     Add option to explicitely define current date
 |                     Add sort by date
@@ -112,12 +116,14 @@ let Calendar =
 			// Date columns //
 			D1 = Table.AddColumn(Cx, "Day", each Date.Day([Date]), Int64.Type),
 			D2 = Table.AddColumn(D1, "Day (Padd)", each Date.ToText([Date], "dd"), type text),
-			Ordinal = {"th", "st", "nd", "rd"},
-			D3 = Table.AddColumn(D2, "Day & Ordinal", each Text.From(Date.Day([Date])) & ((
-					if Text.End(Text.From(Number.IntegerDivide(Date.Day([Date]), 10)), 1) = "1"
-					then Ordinal{0}
-					else Ordinal{Number.Mod(Date.Day([Date]), 10)}?
-				)??Ordinal{0}), type text),
+			// Ordinal = {"th", "st", "nd", "rd"},
+			// D3 = Table.AddColumn(D2, "Day & Ordinal", each Text.From(Date.Day([Date])) & ((
+			// 		if Text.End(Text.From(Number.IntegerDivide(Date.Day([Date]), 10)), 1) = "1"
+			// 		then Ordinal{0}
+			// 		else Ordinal{Number.Mod(Date.Day([Date]), 10)}?
+			// 	)??Ordinal{0}), type text),
+			Ordinal = {"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"},
+			D3 = Table.AddColumn(D2, "Day & Ordinal", each let o = (x) => Text.From(x) & (if List.Contains({11,12,13}, x) then "th" else Ordinal{Number.Mod(x, 10)}) in o(Date.Day([Date])), type text),
 			D4 = Table.AddColumn(D3, "Day of Week Number", each Date.DayOfWeek([Date], FirstWeekDay) + 1, Int64.Type),
 			D5 = Table.AddColumn(D4, "Day of Week (Abbr)", each Date.ToText([Date], "ddd", CultureCode), type text),
 			D6 = Table.AddColumn(D5, "Day of Week", each Date.DayOfWeekName([Date], CultureCode), type text),
@@ -151,10 +157,10 @@ let Calendar =
 			V2 = Table.AddColumn(V1, "Week Constrained (Padd)", each Text.PadStart(Text.From([Week Constrained]), 2, "0"), Int64.Type),
 			V3 = Table.AddColumn(V2, "Week Constrained (Prfx)", each "W" & [#"Week Constrained (Padd)"], Int64.Type),
 			V4 = Table.AddColumn(V3, "Week Side", each (
-				if Date.Month([Week Start Date]) <> Date.Month([Date]) then "B"
-				else if Date.Month(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) <> Date.Month([Date]) then "A"
-				else ""), type text),
-			V5 = Table.AddColumn(V4, "Week (Prfx) & Side", each [#"Week (Prfx)"] & [Week Side], type text),
+				if (Date.Month([Week Start Date]) <> Date.Month([Date]) and Date.Year([Week Start Date]) = Date.Year([Date]))  then "B"
+				else if (Date.Month(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) <> Date.Month([Date]) and Date.Year(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) = Date.Year([Date])) then "A"
+				else null), type text),
+			V5 = Table.AddColumn(V4, "Week & Side (Prfx)", each [#"Week (Prfx)"] & (if [Week Side] = null then "" else [Week Side]), type text),
 			Vx = V5,
 
 			M1 = Table.AddColumn(Vx, "Month Number", each Date.Month([Date]), Int64.Type),
@@ -171,7 +177,7 @@ let Calendar =
 			Q3 = Table.AddColumn(Q2, "Quarter Start Date", each Date.StartOfQuarter([Date]), type date),
 			Q4 = Table.AddColumn(Q3, "Quarter End Date", each Date.EndOfQuarter([Date]), type date),
 			Q5 = Table.AddColumn(Q4, "Year & Quarter (Comp)", each Date.Year([Date]) * 100 + Date.QuarterOfYear([Date]), Int64.Type),
-			Q6 = Table.AddColumn(Q5, "Year & Quarter", each Text.From(Date.Year([Date])) & "-" & Text.From(Date.QuarterOfYear([Date])), type text),
+			Q6 = Table.AddColumn(Q5, "Year & Quarter", each Text.From(Date.Year([Date])) & "-Q" & Text.From(Date.QuarterOfYear([Date])), type text),
 			Qx = Q6,
 
 			Y1 = Table.AddColumn(Qx, "Year", each Date.Year([Date]), Int64.Type),
@@ -187,7 +193,7 @@ let Calendar =
 			F6 = Table.AddColumn(F5, "Financial Month (Prfx)", each "FM" & Text.PadStart(Text.From([Financial Month]), 2, "0"), type text),
 			Fx = F6,
 
-			// ISO //
+			// ISO 8601 //
 			// Get Thursday of each week, year of that Thursday and first Thursday of the year
 				// As vars
 			// CurrentThu = Date.AddDays([Date], 3 - Date.DayOfWeek([Date], Day.Monday)),
@@ -202,10 +208,11 @@ let Calendar =
 			I2 = Table.AddColumn(I1, "ISO Week", each (Duration.Days([CurrentThu] - [FirstYrThu]) / 7) + 1, Int64.Type), // Days between current week's Thursday and the first Thursday of the year
 			I3 = Table.AddColumn(I2, "ISO Week (Padd)", each Text.PadStart(Text.From([ISO Week]), 2, "0"), type text),
 			I4 = Table.AddColumn(I3, "ISO Week (Prfx)", each "W" & [#"ISO Week (Padd)"], type text),
-			I5 = Table.AddColumn(I4, "ISO Year", each Date.Year([CurrentThu]), Int64.Type),
-			I6 = Table.AddColumn(I5, "ISO Year & Week (Comp)", each [ISO Year] * 100 + [ISO Week], Int64.Type),
-			I7 = Table.AddColumn(I6, "ISO Year & Week", each Text.From([ISO Year]) & "-W" & Text.PadStart(Text.From([ISO Week]), 2, "0"), type text), // 2022-W00
-			IHx = Table.RemoveColumns(I7, {"CurrentThu", "YearCurThu", "FirstYrThu"}),
+			I5 = Table.AddColumn(I4, "ISO Week & Side (Prfx)", each [#"ISO Week (Prfx)"] & (if [Week Side] = null then "" else [Week Side]), type text),
+			I6 = Table.AddColumn(I5, "ISO Year", each Date.Year([CurrentThu]), Int64.Type),
+			I7 = Table.AddColumn(I6, "ISO Year & Week (Comp)", each [ISO Year] * 100 + [ISO Week], Int64.Type),
+			I8 = Table.AddColumn(I7, "ISO Year & Week", each Text.From([ISO Year]) & "-W" & Text.PadStart(Text.From([ISO Week]), 2, "0"), type text), // 2022-W00
+			IHx = Table.RemoveColumns(I8, {"CurrentThu", "YearCurThu", "FirstYrThu"}),
 
 			// Calendar 4-4-5 //
 			Calendar445 = (WeekNo) => let 
