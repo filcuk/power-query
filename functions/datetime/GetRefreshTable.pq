@@ -1,8 +1,9 @@
-/*/ REFRESH TABLE \**************************************\
+/*/ GetRefresh \******************************************\
 |  Generate a table with refresh and client information.  |
 |-[ author ]----------------------------------------------|
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
+|  2025-05-14  1.1.1  Add workaround for dynamic values on SSAS
 |  2024-09-26  1.1.0  Improve column names
 |                     Add summer time calculation
 |                     Add custom time zone option
@@ -21,21 +22,26 @@ let GetRefreshTable =
 			// Defaults
 			SummerTimeOffset = if CustomOffset <> null and SummerTimeOffset = null then false else SummerTimeOffset,
 			OutputType = if OutputType = null then "Horizontal" else OutputType,
+			// This is a required workaround for SSAS, which doesn't support dynamic variables & considers those to be undefined variables
 
 			// Generate base table
 			Source = DateTimeZone.UtcNow(),
 			Table = #table(type table [#"Refresh UTC" = datetimezone], {{Source}}),
 			RefreshLocal = Table.AddColumn(Table, "Refresh Local", each DateTimeZone.ToLocal([Refresh UTC]), type datetimezone),
 			TimeZoneLocalOffset = Table.AddColumn(RefreshLocal, "TZ Local Offset", each DateTimeZone.ZoneHours([Refresh Local]), type number),
-			TimeZoneLocal = Table.AddColumn(TimeZoneLocalOffset, "TZ Local", each TimeZone.Current, type text),
-			CultureLocal = Table.AddColumn(TimeZoneLocal, "Culture Local", each Culture.Current, type text),
+			// Must be disabled on SSAS
+			TimeZoneLocal = Table.AddColumn(TimeZoneLocalOffset, "TZ Local", each try TimeZone.Current otherwise "Undefined", type text),
+			CultureLocal = Table.AddColumn(TimeZoneLocal, "Culture Local", each try Culture.Current otherwise "Undefined", type text),
+			Base = CultureLocal,
+			// Must be enabled on SSAS
+			// Base = TimeZoneLocalOffset,
 
 			// Summer time (European standards)
 			CurrentDate = DateTime.From(Source),
 			SummerStart = Date.StartOfWeek(#date(Date.Year(Source), 3, 14), Day.Sunday) & #time(1, 0, 0),
 			SummerEnd = Date.StartOfWeek(#date(Date.Year(Source), 11, 7), Day.Sunday) & #time(1, 0, 0),
 			SummerTime = CurrentDate >= SummerStart and CurrentDate <= SummerEnd,
-			AddSummerTime = Table.AddColumn(CultureLocal, "Summer Time", each SummerTime, type logical),
+			AddSummerTime = Table.AddColumn(Base, "Summer Time", each SummerTime, type logical),
 			StandardOutput = AddSummerTime,
 
 			// Custom TZ offset
