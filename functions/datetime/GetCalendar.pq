@@ -15,6 +15,7 @@
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |  2014, Matt Masson, mattmasson.com                      |
 |-[ changelog ]-------------------------------------------|
+|  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
 |  2025-05-07  3.1.0  Add [ISO Week & Side*]
 |                     Change names to include tags at the end
 |                     Improve compatibility of [Day & Ordinal] (thanks Asma)
@@ -274,14 +275,14 @@ let Calendar =
 			T4 = Table.AddColumn(T3, "Relative Calendar Quarters", each (Date.Year([Date]) * 4 + Date.QuarterOfYear([Date])) - (Date.Year(Today) * 4 + Date.QuarterOfYear(Today)), Int64.Type),
 			T5 = Table.AddColumn(T4, "Relative Calendar Years", each Date.Year([Date]) - Date.Year(Today), Int64.Type),
 			// Relative rolling counts //
-			T6 = Table.AddColumn(T5, "Relative Weeks", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), 7), 0), Int64.Type),
+			T6 = Table.AddColumn(T5, "Relative Weeks", each Number.IntegerDivide(Number.From(Date.StartOfWeek([Date], FirstWeekDay)) - Number.From(Date.StartOfWeek(Today, FirstWeekDay)), 7), Int64.Type),
 			T7 = Table.AddColumn(T6, "Relative Months", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/12), 0), Int64.Type),
 			T8 = Table.AddColumn(T7, "Relative Quarters", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/4), 0), Int64.Type),
 			T9 = Table.AddColumn(T8, "Relative Years", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), 365.25), 0), Int64.Type),
 			Tx = T9,
 
 			// Ralative comparative counts //
-			U1 = Table.AddColumn(Tx, "Relative Day of Week", each Date.DayOfWeek([Date], FirstWeekDay) - Date.DayOfWeek(Today, FirstWeekDay) + 1 + 1, Int64.Type),
+			U1 = Table.AddColumn(Tx, "Relative Day of Week", each let d = Date.DayOfWeek([Date], FirstWeekDay) - Date.DayOfWeek(Today, FirstWeekDay) in d + (if d < 0 then 7 else 0), Int64.Type),
 			U2 = Table.AddColumn(U1, "Relative Day of Year", each Date.DayOfYear([Date]) - Date.DayOfYear(Today), Int64.Type),
 			U3 = Table.AddColumn(U2, "Relative Week of Year", each Date.WeekOfYear([Date], FirstWeekDay) - Date.WeekOfYear(Today, FirstWeekDay), Int64.Type),
 			U4 = Table.AddColumn(U3, "Relative Month of Year", each Date.Month([Date]) - Date.Month(Today), Int64.Type),
@@ -305,18 +306,21 @@ let Calendar =
 			LD3 = Table.AddColumn(LD2, "Is in Today", each Date.IsInCurrentDay([Date]), type logical),
 			LD4 = Table.AddColumn(LD3, "Is in Day +1", each Date.IsInNextDay([Date]), type logical),
 			LD5 = Table.AddColumn(LD4, "Is in Day +2", each Date.IsInNextNDays([Date], 2) and not Date.IsInNextNDays([Date], 1), type logical),
+			LDx = LD5,
 
-			LW1 = Table.AddColumn(LD5, "Is in Week -2", each Date.IsInPreviousNWeeks([Date], 2) and not Date.IsInPreviousNWeeks([Date], 1), type logical),
-			LW2 = Table.AddColumn(LW1, "Is in Week -1", each Date.IsInPreviousWeek([Date]), type logical),
-			LW3 = Table.AddColumn(LW2, "Is in This Week", each Date.IsInCurrentWeek([Date]), type logical),
-			LW4 = Table.AddColumn(LW3, "Is in Week +1", each Date.IsInNextWeek([Date]), type logical),
-			LW5 = Table.AddColumn(LW4, "Is in Week +2", each Date.IsInNextNWeeks([Date], 2) and not Date.IsInNextNWeeks([Date], 1), type logical),
+			IsInRelativeWeek = (RelWeek, Offset) => RelWeek = Offset,
+			LW1 = Table.AddColumn(LDx, "Is in Week -2", each IsInRelativeWeek([Relative Weeks], -2), type logical),
+			LW2 = Table.AddColumn(LW1, "Is in Week -1", each IsInRelativeWeek([Relative Weeks], -1), type logical),
+			LW3 = Table.AddColumn(LW2, "Is in This Week", each IsInRelativeWeek([Relative Weeks], 0), type logical),
+			LW4 = Table.AddColumn(LW3, "Is in Week +1", each IsInRelativeWeek([Relative Weeks], 1), type logical),
+			LW5 = Table.AddColumn(LW4, "Is in Week +2", each IsInRelativeWeek([Relative Weeks], 2), type logical),
 
-			// LI1 = Table.AddColumn(LW5, "Is in I-2", each Date.IsInPreviousNWeeks([Date], 2) and not Date.IsInPreviousNWeeks([Date], 1), type logical),
-			// LI2 = Table.AddColumn(LI1, "Is in I-1", each Date.IsInPreviousWeek([Date]), type logical),
-			// LI3 = Table.AddColumn(LI2, "Is in I-0", each Date.IsInCurrentWeek([Date]), type logical),
-			// LI4 = Table.AddColumn(LI3, "Is in I+1", each Date.IsInNextWeek([Date]), type logical),
-			// LI5 = Table.AddColumn(LI4, "Is in I+2", each Date.IsInNextNWeeks([Date], 2) and not Date.IsInNextNWeeks([Date], 1), type logical),
+			// DO NOT USE - Doesn't account for week start day //
+			// LW1 = Table.AddColumn(LD5, "Is in Week -2", each Date.IsInPreviousNWeeks([Date], 2) and not Date.IsInPreviousNWeeks([Date], 1), type logical),
+			// LW2 = Table.AddColumn(LW1, "Is in Week -1", each Date.IsInPreviousWeek([Date]), type logical),
+			// LW3 = Table.AddColumn(LW2, "Is in This Week", each Date.IsInCurrentWeek([Date]), type logical),
+			// LW4 = Table.AddColumn(LW3, "Is in Week +1", each Date.IsInNextWeek([Date]), type logical),
+			// LW5 = Table.AddColumn(LW4, "Is in Week +2", each Date.IsInNextNWeeks([Date], 2) and not Date.IsInNextNWeeks([Date], 1), type logical),
 
 			LM1 = Table.AddColumn(LW5, "Is in Month -2", each Date.IsInPreviousNMonths([Date], 2) and not Date.IsInPreviousNMonths([Date], 1), type logical),
 			LM2 = Table.AddColumn(LM1, "Is in Month -1", each Date.IsInPreviousMonth([Date]), type logical),
