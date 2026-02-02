@@ -15,6 +15,7 @@
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |  2014, Matt Masson, mattmasson.com                      |
 |-[ changelog ]-------------------------------------------|
+|  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
 |  2025-05-07  3.1.0  Add [ISO Week & Side*]
 |                     Change names to include tags at the end
@@ -289,8 +290,11 @@ let Calendar =
 			U5 = Table.AddColumn(U4, "Relative Quarter of Year", each Date.QuarterOfYear([Date]) - Date.QuarterOfYear(Today), Int64.Type),
 			Ux = U5,
 
+			// Helper function //
+			IsInRelativeWeek = (RelWeek, Offset) => RelWeek = Offset,
+
 			// Bool to date //
-			LT1 = Table.AddColumn(Ux, "Is WTD", each Date.IsInCurrentWeek([Date]) and [Date] <= Today, type logical),
+			LT1 = Table.AddColumn(Ux, "Is WTD", each IsInRelativeWeek([Relative Weeks], 0) and [Date] <= Today, type logical),
 			LT2 = Table.AddColumn(LT1, "Is MTD", each Date.IsInCurrentMonth([Date]) and [Date] <= Today, type logical),
 			LT3 = Table.AddColumn(LT2, "Is QTD", each Date.IsInCurrentQuarter([Date]) and [Date] <= Today, type logical),
 			LT4 = Table.AddColumn(LT3, "Is YTD", each Date.IsInCurrentYear([Date]) and [Date] <= Today, type logical),
@@ -308,7 +312,6 @@ let Calendar =
 			LD5 = Table.AddColumn(LD4, "Is in Day +2", each Date.IsInNextNDays([Date], 2) and not Date.IsInNextNDays([Date], 1), type logical),
 			LDx = LD5,
 
-			IsInRelativeWeek = (RelWeek, Offset) => RelWeek = Offset,
 			LW1 = Table.AddColumn(LDx, "Is in Week -2", each IsInRelativeWeek([Relative Weeks], -2), type logical),
 			LW2 = Table.AddColumn(LW1, "Is in Week -1", each IsInRelativeWeek([Relative Weeks], -1), type logical),
 			LW3 = Table.AddColumn(LW2, "Is in This Week", each IsInRelativeWeek([Relative Weeks], 0), type logical),
