@@ -4,6 +4,7 @@
 |-[ author ]----------------------------------------------|
 |  2026, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
+|  2026-02-28  1.1.0  Add option to include blanks for bi-direcational relationships
 |  2026-02-28  1.0.0  Initial
 \*/
 
@@ -11,15 +12,18 @@ let GetCategoryList =
 	let Function = (
 		Column as list,
 		Name as text,
-		Delimiter as text
+		Delimiter as text,
+		optional IncludeBlanks as logical
 	) as table =>
 
 		let
 			Source = Column,
+			IncludeBlanks = if IncludeBlanks <> null then IncludeBlanks else false,
+
 			Distinct1 = List.Distinct(Source),
 			Table = Table.FromList(Distinct1, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-			FilterNull = Table.SelectRows(Table, each ([Column1] <> null)),
-			AddCategory = Table.AddColumn(FilterNull, Name, each Text.Split([Column1], Delimiter)),
+			Filter = Table.SelectRows(Table, each ([Column1] <> null) or IncludeBlanks),
+			AddCategory = Table.AddColumn(Filter, Name, each try Text.Split([Column1], Delimiter) otherwise {null}),
 			RemoveList = Table.RemoveColumns(AddCategory,{"Column1"}),
 			ExpandCategory = Table.ExpandListColumn(RemoveList, Name),
 			Type = Table.TransformColumnTypes(ExpandCategory,{{Name, type text}}),
@@ -42,6 +46,12 @@ let GetCategoryList =
 				Documentation.FieldCaption = "List delimiter",
 				Documentation.FieldDescription = "Delimiter to split the list by",
 				Documentation.SampleValues = {","}
+			]),
+			optional IncludeBlanks as (type logical meta [
+				Documentation.FieldCaption = "Include blanks",
+				Documentation.FieldDescription = "Should the output include empty categories",
+				Documentation.AllowedValues = {true, false},
+				Documentation.SampleValues = {false}
 			])
 			) as any meta [
 				Documentation.Name = "Get Category List",

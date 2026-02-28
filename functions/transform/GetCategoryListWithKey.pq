@@ -1,9 +1,10 @@
 /*/ Get Category List with Key \**************************\
 |  Converts a concatenated category column                |
-|  to a distinct list with link to the original record.   |
+|  to a distinct list.                                    |
 |-[ author ]----------------------------------------------|
 |  2026, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
+|  2026-02-28  1.1.0  Add option to include blanks for bi-direcational relationships
 |  2026-02-28  1.0.0  Initial
 \*/
 
@@ -12,15 +13,18 @@ let GetCategoryListWithKey =
 		Table as table,
 		KeyColumn as text,
 		ItemColumn as text,
-		Delimiter as text
+		Delimiter as text,
+		optional IncludeBlanks as logical
 	) as table =>
 
         let
             Source = Table,
-            Columns = Table.SelectColumns(Source,{KeyColumn, ItemColumn}),
+            IncludeBlanks = if IncludeBlanks <> null then IncludeBlanks else true,
+			
+			Columns = Table.SelectColumns(Source,{KeyColumn, ItemColumn}),
             RenameTemp = Table.RenameColumns(Columns,{{ItemColumn, "Temp"}}),
-            FilterNull = Table.SelectRows(RenameTemp, each ([Temp] <> null)),
-            AddList = Table.AddColumn(FilterNull, ItemColumn, each Text.Split([Temp], Delimiter)),
+            Filter = Table.SelectRows(RenameTemp, each ([Temp] <> null) or IncludeBlanks),
+			AddList = Table.AddColumn(Filter, ItemColumn, each try Text.Split([Temp], Delimiter) otherwise {null}),
             RemoveTemp = Table.RemoveColumns(AddList,{"Temp"}),
             ExpandCategory = Table.ExpandListColumn(RemoveTemp, ItemColumn),
             Type = Table.TransformColumnTypes(ExpandCategory,{{ItemColumn, type text}}),
@@ -36,18 +40,21 @@ let GetCategoryListWithKey =
 			]),
 			KeyColumn as (type text meta [
 				Documentation.FieldCaption = "Key column name",
-				Documentation.FieldDescription = "Name of the record key column",
-				Documentation.SampleValues = {"Key1"}
+				Documentation.FieldDescription = "Name of the record key column"
 			]),
 			ItemColumn as (type text meta [
 				Documentation.FieldCaption = "Item column name",
-				Documentation.FieldDescription = "Name of the category column with concatenated values to split",
-				Documentation.SampleValues = {"Category1"}
+				Documentation.FieldDescription = "Name of the category column with concatenated values to split"
 			]),
 			Delimiter as (type text meta [
 				Documentation.FieldCaption = "List delimiter",
-				Documentation.FieldDescription = "Delimiter to split the list by",
-				Documentation.SampleValues = {","}
+				Documentation.FieldDescription = "Delimiter to split the list by"
+			]),
+			optional IncludeBlanks as (type logical meta [
+				Documentation.FieldCaption = "Include blanks",
+				Documentation.FieldDescription = "Should the output include empty categories",
+				Documentation.AllowedValues = {true, false},
+				Documentation.SampleValues = {true}
 			])
 			) as any meta [
 				Documentation.Name = "Get Category List with Key",
