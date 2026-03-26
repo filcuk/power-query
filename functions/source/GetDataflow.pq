@@ -5,6 +5,7 @@
 |-[ author ]----------------------------------------------|
 |  2024, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
+|  2026-03-26  1.1.1  Fix optional parameters not being optional
 |  2024-09-27  1.1.0  Add table parameter
 |  2024-09-17  1.0.0  Initial
 \*/
@@ -15,8 +16,8 @@ let
             Function = (
                 WorkspaceGUID as text
                 ,DataflowGUID as text
-                ,Entity as nullable text
-                ,Version as nullable text
+                ,optional Entity as nullable text
+                ,optional Version as nullable text
             ) as any =>
                 let
                     Platform = PowerPlatform.Dataflows(null),
@@ -43,11 +44,11 @@ let
 					Documentation.FieldCaption = "Dataflow GUID"
 					,Formatting.IsCode = true
 				])
-                ,Entity as (type text meta [
+                ,optional Entity as (type text meta [
 					Documentation.FieldCaption = "Entity Name"
 					,Formatting.IsCode = true
 				])
-                ,Version as (type text meta [
+                ,optional Version as (type text meta [
 					Documentation.FieldCaption = "Entity Version"
                     ,Documentation.Description = "Default is """""
 					,Formatting.IsCode = true
