@@ -15,6 +15,7 @@
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |  2014, Matt Masson, mattmasson.com                      |
 |-[ changelog ]-------------------------------------------|
+|  2026-03-25  3.2.0  Change [Week Side] to lower case
 |  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
 |  2025-05-07  3.1.0  Add [ISO Week & Side*]
@@ -159,8 +160,8 @@ let Calendar =
 			V2 = Table.AddColumn(V1, "Week Constrained (Padd)", each Text.PadStart(Text.From([Week Constrained]), 2, "0"), Int64.Type),
 			V3 = Table.AddColumn(V2, "Week Constrained (Prfx)", each "W" & [#"Week Constrained (Padd)"], Int64.Type),
 			V4 = Table.AddColumn(V3, "Week Side", each (
-				if (Date.Month([Week Start Date]) <> Date.Month([Date]) and Date.Year([Week Start Date]) = Date.Year([Date]))  then "B"
-				else if (Date.Month(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) <> Date.Month([Date]) and Date.Year(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) = Date.Year([Date])) then "A"
+				if (Date.Month([Week Start Date]) <> Date.Month([Date]) and Date.Year([Week Start Date]) = Date.Year([Date]))  then "b"
+				else if (Date.Month(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) <> Date.Month([Date]) and Date.Year(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) = Date.Year([Date])) then "a"
 				else null), type text),
 			V5 = Table.AddColumn(V4, "Week & Side (Prfx)", each [#"Week (Prfx)"] & (if [Week Side] = null then "" else [Week Side]), type text),
 			Vx = V5,
