@@ -24,6 +24,7 @@
 |					  Fix [Is Weekday/end] shifting with `FirstWeekDay`
 |					  Fix holidays to be null-safe
 |					  Fix [Relative Calendar Weeks] missing `FirstWeekDay`
+|					  Fix [Relative *] rounding to prevent +1 shift
 |  2026-03-25  3.2.0  Change [Week Side] to lower case
 |  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
