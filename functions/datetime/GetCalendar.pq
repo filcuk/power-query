@@ -19,6 +19,7 @@
 |					  Fix [Is Leap Day] missing day number
 |					  Fix incorrect holiday regions
 |					  Fix relative dates not respecting custom `Today`
+|					  Fix [Week Constrained] missing `FirstWeekDay`
 |  2026-03-25  3.2.0  Change [Week Side] to lower case
 |  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
@@ -157,7 +158,7 @@ let Calendar =
 				if Date.StartOfWeek([Date], FirstWeekDay) < Date.StartOfMonth([Date])
 					then if Duration.Days(Date.StartOfMonth([Date]) - Date.StartOfWeek([Date], FirstWeekDay)) < 4
 						then Date.WeekOfYear([Date], FirstWeekDay) else Date.WeekOfYear(Date.AddWeeks([Date], 1), FirstWeekDay)
-				else if Date.EndOfWeek([Date]) > Date.EndOfMonth([Date])
+				else if Date.EndOfWeek([Date], FirstWeekDay) > Date.EndOfMonth([Date])
 					then if Duration.Days(Date.EndOfWeek([Date], FirstWeekDay) - Date.EndOfMonth([Date])) < 4
 						then Date.WeekOfYear([Date], FirstWeekDay) else Date.WeekOfYear(Date.AddWeeks([Date], -1), FirstWeekDay)
 				else Date.WeekOfYear([Date], FirstWeekDay), Int64.Type),
