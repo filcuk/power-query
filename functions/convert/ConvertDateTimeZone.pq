@@ -5,6 +5,7 @@
 | 2023, Filip Kraus,       contact@filipkraus.net         |
 |-[ changelog ]-------------------------------------------|
 |  2026-07-22   1.2.0   Raise errors instead of returning error record
+|                       Use IsCEST for CET offset
 |  2023-06-29   1.1.0   Add CET/CEST
 |                       Add static DST TZ conversions
 |  2023-05-31   1.0.0   Initial
@@ -33,8 +34,8 @@ let
     UTCtoBST = InputDateTime + #duration(0,1,0,0),
     BSTtoUTC = InputDateTime - #duration(0,1,0,0),
 
-    UTCtoCET = InputDateTime + (if IsBST then #duration(0,2,0,0) else #duration(0,1,0,0)),
-    CETtoUTC = InputDateTime - (if IsBST then #duration(0,2,0,0) else #duration(0,1,0,0)),
+    UTCtoCET = InputDateTime + (if IsCEST then #duration(0,2,0,0) else #duration(0,1,0,0)),
+    CETtoUTC = InputDateTime - (if IsCEST then #duration(0,2,0,0) else #duration(0,1,0,0)),
     UTCtoCEST = InputDateTime + #duration(0,2,0,0),
     CESTtoUTC = InputDateTime - #duration(0,2,0,0),
 
@@ -51,7 +52,7 @@ let
         
         // UTC - CET/CEST
         else if InputTimeZone = "UTC" and TargetTimeZone = "CET" then [DateTime=UTCtoCET, DST=IsCEST]
-        else if InputTimeZone = "CET" and TargetTimeZone = "UTC" then [DateTime=CETtoUTC, DST=IsBST]
+        else if InputTimeZone = "CET" and TargetTimeZone = "UTC" then [DateTime=CETtoUTC, DST=IsCEST]
         else if InputTimeZone = "UTC" and TargetTimeZone = "CEST" then [DateTime=UTCtoCEST, DST=true]
         else if InputTimeZone = "CEST" and TargetTimeZone = "UTC" then [DateTime=CESTtoUTC, DST=true]
         
