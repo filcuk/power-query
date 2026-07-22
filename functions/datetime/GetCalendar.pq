@@ -16,6 +16,7 @@
 |  2014, Matt Masson, mattmasson.com                      |
 |-[ changelog ]-------------------------------------------|
 |  2026-03-25  3.2.0  Fix 445B using the wrong function
+|					  Fix [Is Leap Day] missing day number
 |  2026-03-25  3.2.0  Change [Week Side] to lower case
 |  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
@@ -347,7 +348,7 @@ let Calendar =
 			LYx = LY5,
 
 			LH1 = Table.AddColumn(LYx, "Is Leap Year", each Date.IsLeapYear([Date]), type logical),
-			LH2 = Table.AddColumn(LH1, "Is Leap Day", each Date.IsLeapYear([Date]) and (Date.Month([Date]) = 2) and (Date.Day = 29), type logical),
+			LH2 = Table.AddColumn(LH1, "Is Leap Day", each Date.IsLeapYear([Date]) and (Date.Month([Date]) = 2) and (Date.Day([Date]) = 29), type logical),
 			LH3 = Table.AddColumn(LH2, "Is Weekday", each Date.DayOfWeek([Date], FirstWeekDay) <= 4, type logical),
 			LH4 = Table.AddColumn(LH3, "Is Weekend", each Date.DayOfWeek([Date], FirstWeekDay) >= 5, type logical),
 			LHx = LH4,
