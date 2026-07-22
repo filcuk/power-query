@@ -4,9 +4,10 @@
 | 2022, Damian (comments), blog.crossjoin.co.uk           |
 | 2023, Filip Kraus,       contact@filipkraus.net         |
 |-[ changelog ]-------------------------------------------|
-|  2023-05-31   1.0.0   Initial
+|  2026-07-22   1.2.0   Raise errors instead of returning error record
 |  2023-06-29   1.1.0   Add CET/CEST
-|                       Add static DST TZ conversions 
+|                       Add static DST TZ conversions
+|  2023-05-31   1.0.0   Initial
 \*/
 
 let
@@ -38,9 +39,9 @@ let
     CESTtoUTC = InputDateTime - #duration(0,2,0,0),
 
     Output =
-        if InputTimeZone = TargetTimeZone then Error.Record("Same input and target time zone.")
+        if InputTimeZone = TargetTimeZone then error Error.Record("Expression.Error", "Same input and target time zone.")
         // else if (List.Contains({ "BST", "CEST" }, InputTimeZone) or List.Contains({ "BST", "CEST" }, TargetTimeZone)) and AutoDST = false
-        //     then Error.Record("DST time zones require 'Auto DST' to be enabled.")
+        //     then error Error.Record("Expression.Error", "DST time zones require 'Auto DST' to be enabled.")
         
         // UTC - GMT/BST
         else if InputTimeZone = "UTC" and TargetTimeZone = "GMT" then [DateTime=UTCtoGMT, DST=IsBST]
@@ -54,7 +55,7 @@ let
         else if InputTimeZone = "UTC" and TargetTimeZone = "CEST" then [DateTime=UTCtoCEST, DST=true]
         else if InputTimeZone = "CEST" and TargetTimeZone = "UTC" then [DateTime=CESTtoUTC, DST=true]
         
-        else Error.Record("Unsupported time zone.")
+        else error Error.Record("Expression.Error", "Unsupported time zone.")
 
 in
     Output,
