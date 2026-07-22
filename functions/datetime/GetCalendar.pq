@@ -23,6 +23,7 @@
 |					  Fix [Week Constrained *] using wrong type
 |					  Fix [Is Weekday/end] shifting with `FirstWeekDay`
 |					  Fix holidays to be null-safe
+|					  Fix [Relative Calendar Weeks] missing `FirstWeekDay`
 |  2026-03-25  3.2.0  Change [Week Side] to lower case
 |  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
@@ -280,7 +281,7 @@ let Calendar =
 
 			// Relative calendar counts //
 			T1 = Table.AddColumn(Px, "Relative Days", each Duration.TotalDays([Date] - Today), Int64.Type),
-			T2 = Table.AddColumn(T1, "Relative Calendar Weeks", each (Date.Year([Date]) * 52 + Date.WeekOfYear([Date])) - (Date.Year(Today) * 52 + Date.WeekOfYear(Today)), Int64.Type),
+			T2 = Table.AddColumn(T1, "Relative Calendar Weeks", each (Date.Year([Date]) * 52 + Date.WeekOfYear([Date], FirstWeekDay)) - (Date.Year(Today) * 52 + Date.WeekOfYear(Today, FirstWeekDay)), Int64.Type),
 			T3 = Table.AddColumn(T2, "Relative Calendar Months", each (Date.Year([Date]) * 12 + Date.Month([Date])) - (Date.Year(Today) * 12 + Date.Month(Today)), Int64.Type),
 			T4 = Table.AddColumn(T3, "Relative Calendar Quarters", each (Date.Year([Date]) * 4 + Date.QuarterOfYear([Date])) - (Date.Year(Today) * 4 + Date.QuarterOfYear(Today)), Int64.Type),
 			T5 = Table.AddColumn(T4, "Relative Calendar Years", each Date.Year([Date]) - Date.Year(Today), Int64.Type),
