@@ -1,24 +1,15 @@
-/*********************************************************\
-| GET ERRORS
-|
-|=--purpose----------------------------------------------=|
-| Return error values with messages, where possible.
-| 
-|=--credits----------------------------------------------=|
-| Original https://community.fabric.microsoft.com/t5/Power-Query/List-all-errors-in-a-table/td-p/1470730
-| Modified 2023 by Filip Kraus, contact@filipkraus.net
-|
-|=--changelog--------------------------------------------=|
-|   2026-07-22, 1.3.0
-|		Add documentation type
-|       Make ReturnAll optional
-|   2024-01-25, 1.2.0
-|       Add parameter to allow returning full table
-|   2023-11-15, 1.1.0
-|       Fix Excel formula errors showing as null
-| 	2023-08-01, 1.0.0
-| 		Initial
-\*********************************************************/
+/*/ GetErrors \*******************************************\
+|  Return error values with messages, where possible.     |
+|-[ author ]----------------------------------------------|
+|  Original: community.fabric.microsoft.com (td-p/1470730)|
+|  Modified: 2023, Filip Kraus, contact@filipkraus.net    |
+|-[ changelog ]-------------------------------------------|
+|  2026-07-22  1.3.0  Add documentation type
+|                     Make ReturnAll optional
+|  2024-01-25  1.2.0  Add parameter to allow returning full table
+|  2023-11-15  1.1.0  Fix Excel formula errors showing as null
+|  2023-08-01  1.0.0  Initial
+\*/
 
 let GetErrors =
 	let Function = (
