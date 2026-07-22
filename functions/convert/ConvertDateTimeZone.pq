@@ -1,14 +1,14 @@
-/*/ TZ CONVERTER \****************************************\
-| Time zone converter with DST support                     |
+/*/ ConvertDateTimeZone \*********************************\
+|  Time zone converter with DST support.                  |
 |-[ author ]----------------------------------------------|
-| 2022, Damian (comments), blog.crossjoin.co.uk           |
-| 2023, Filip Kraus,       contact@filipkraus.net         |
+|  2022, Damian (comments), blog.crossjoin.co.uk          |
+|  2023, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
-|  2026-07-22   1.2.0   Raise errors instead of returning error record
-|                       Use IsCEST for CET offset
-|  2023-06-29   1.1.0   Add CET/CEST
-|                       Add static DST TZ conversions
-|  2023-05-31   1.0.0   Initial
+|  2026-07-22  1.2.0  Raise errors instead of returning error record
+|                     Use IsCEST for CET offset
+|  2023-06-29  1.1.0  Add CET/CEST
+|                     Add static DST TZ conversions
+|  2023-05-31  1.0.0  Initial
 \*/
 
 let
