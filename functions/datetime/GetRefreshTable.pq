@@ -4,6 +4,7 @@
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
 |  2026-07-22  1.2.0  Add DST region switch
+|                     Raise error on invalid OutputType
 |  2025-05-14  1.1.1  Add workaround for dynamic values on SSAS
 |  2024-09-26  1.1.0  Improve column names
 |                     Add summer time calculation
@@ -77,7 +78,7 @@ let GetRefreshTable =
 				if OutputType = "Horizontal" then OutputTable
 				else if OutputType = "Vertical" then OutputTableVertical
 				else if OutputType = "Record" then OutputRecord
-				else null
+				else error Error.Record("Expression.Error", "OutputType must be Horizontal, Vertical, or Record.")
 		in
 			Output,
 			FunctionType = type function (
