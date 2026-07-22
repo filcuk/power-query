@@ -16,16 +16,16 @@
 |  2014, Matt Masson, mattmasson.com                      |
 |-[ changelog ]-------------------------------------------|
 |  2026-03-25  3.2.0  Fix 445B using the wrong function
-|					  Fix [Is Leap Day] missing day number
-|					  Fix incorrect holiday regions
-|					  Fix relative dates not respecting custom `Today`
-|					  Fix [Week Constrained] missing `FirstWeekDay`
-|					  Fix [Week Constrained *] using wrong type
-|					  Fix [Is Weekday/end] shifting with `FirstWeekDay`
-|					  Fix holidays to be null-safe
-|					  Fix [Relative Calendar Weeks] missing `FirstWeekDay`
-|					  Fix [Relative *] rounding to prevent +1 shift
-|  2026-03-25  3.2.0  Change [Week Side] to lower case
+|                     Fix [Is Leap Day] missing day number
+|                     Fix incorrect holiday regions
+|                     Fix relative dates not respecting custom `Today`
+|                     Fix [Week Constrained] missing `FirstWeekDay`
+|                     Fix [Week Constrained *] using wrong type
+|                     Fix [Is Weekday/end] shifting with `FirstWeekDay`
+|                     Fix holidays to be null-safe
+|                     Fix [Relative Calendar Weeks] missing `FirstWeekDay`
+|                     Fix [Relative *] rounding to prevent +1 shift
+|                     Change [Week Side] to lower case
 |  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
 |  2025-05-07  3.1.0  Add [ISO Week & Side*]
