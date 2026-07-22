@@ -18,6 +18,7 @@
 |  2026-03-25  3.2.0  Fix 445B using the wrong function
 |					  Fix [Is Leap Day] missing day number
 |					  Fix incorrect holiday regions
+|					  Fix relative dates not respecting custom `Today`
 |  2026-03-25  3.2.0  Change [Week Side] to lower case
 |  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
@@ -294,14 +295,19 @@ let Calendar =
 			U5 = Table.AddColumn(U4, "Relative Quarter of Year", each Date.QuarterOfYear([Date]) - Date.QuarterOfYear(Today), Int64.Type),
 			Ux = U5,
 
-			// Helper function //
+			// Helper functions (relative to Today / CurrentDate — not host Date.IsIn*) //
 			IsInRelativeWeek = (RelWeek, Offset) => RelWeek = Offset,
+			IsInRelativeMonth = (d, Offset) => Date.StartOfMonth(d) = Date.StartOfMonth(Date.AddMonths(Today, Offset)),
+			IsInRelativeQuarter = (d, Offset) => Date.StartOfQuarter(d) = Date.StartOfQuarter(Date.AddQuarters(Today, Offset)),
+			IsInRelativeYear = (d, Offset) => Date.Year(d) = Date.Year(Today) + Offset,
+			IsInPreviousNDays = (d, N) => d >= Date.AddDays(Today, -N) and d < Today,
+			IsInNextNDays = (d, N) => d > Today and d <= Date.AddDays(Today, N),
 
 			// Bool to date //
 			LT1 = Table.AddColumn(Ux, "Is WTD", each IsInRelativeWeek([Relative Weeks], 0) and [Date] <= Today, type logical),
-			LT2 = Table.AddColumn(LT1, "Is MTD", each Date.IsInCurrentMonth([Date]) and [Date] <= Today, type logical),
-			LT3 = Table.AddColumn(LT2, "Is QTD", each Date.IsInCurrentQuarter([Date]) and [Date] <= Today, type logical),
-			LT4 = Table.AddColumn(LT3, "Is YTD", each Date.IsInCurrentYear([Date]) and [Date] <= Today, type logical),
+			LT2 = Table.AddColumn(LT1, "Is MTD", each IsInRelativeMonth([Date], 0) and [Date] <= Today, type logical),
+			LT3 = Table.AddColumn(LT2, "Is QTD", each IsInRelativeQuarter([Date], 0) and [Date] <= Today, type logical),
+			LT4 = Table.AddColumn(LT3, "Is YTD", each IsInRelativeYear([Date], 0) and [Date] <= Today, type logical),
 
 			// Bool relative //
 			LR1 = Table.AddColumn(LT4, "Is Before Today", each [Date] < Today, type logical),
@@ -309,11 +315,11 @@ let Calendar =
 			LR3 = Table.AddColumn(LR2, "Is After Today", each [Date] > Today, type logical),
 			LR4 = Table.AddColumn(LR3, "Is On or After Today", each [Date] >= Today, type logical),
 
-			LD1 = Table.AddColumn(LR4, "Is in Day -2", each Date.IsInPreviousNDays([Date], 2) and not Date.IsInPreviousNDays([Date], 1), type logical),
-			LD2 = Table.AddColumn(LD1, "Is in Day -1", each Date.IsInPreviousDay([Date]), type logical),
-			LD3 = Table.AddColumn(LD2, "Is in Today", each Date.IsInCurrentDay([Date]), type logical),
-			LD4 = Table.AddColumn(LD3, "Is in Day +1", each Date.IsInNextDay([Date]), type logical),
-			LD5 = Table.AddColumn(LD4, "Is in Day +2", each Date.IsInNextNDays([Date], 2) and not Date.IsInNextNDays([Date], 1), type logical),
+			LD1 = Table.AddColumn(LR4, "Is in Day -2", each [Date] = Date.AddDays(Today, -2), type logical),
+			LD2 = Table.AddColumn(LD1, "Is in Day -1", each [Date] = Date.AddDays(Today, -1), type logical),
+			LD3 = Table.AddColumn(LD2, "Is in Today", each [Date] = Today, type logical),
+			LD4 = Table.AddColumn(LD3, "Is in Day +1", each [Date] = Date.AddDays(Today, 1), type logical),
+			LD5 = Table.AddColumn(LD4, "Is in Day +2", each [Date] = Date.AddDays(Today, 2), type logical),
 			LDx = LD5,
 
 			LW1 = Table.AddColumn(LDx, "Is in Week -2", each IsInRelativeWeek([Relative Weeks], -2), type logical),
@@ -329,23 +335,23 @@ let Calendar =
 			// LW4 = Table.AddColumn(LW3, "Is in Week +1", each Date.IsInNextWeek([Date]), type logical),
 			// LW5 = Table.AddColumn(LW4, "Is in Week +2", each Date.IsInNextNWeeks([Date], 2) and not Date.IsInNextNWeeks([Date], 1), type logical),
 
-			LM1 = Table.AddColumn(LW5, "Is in Month -2", each Date.IsInPreviousNMonths([Date], 2) and not Date.IsInPreviousNMonths([Date], 1), type logical),
-			LM2 = Table.AddColumn(LM1, "Is in Month -1", each Date.IsInPreviousMonth([Date]), type logical),
-			LM3 = Table.AddColumn(LM2, "Is in This Month", each Date.IsInCurrentMonth([Date]), type logical),
-			LM4 = Table.AddColumn(LM3, "Is in Month +1", each Date.IsInNextMonth([Date]), type logical),
-			LM5 = Table.AddColumn(LM4, "Is in Month +2", each Date.IsInNextNMonths([Date], 2) and not Date.IsInNextNMonths([Date], 1), type logical),
+			LM1 = Table.AddColumn(LW5, "Is in Month -2", each IsInRelativeMonth([Date], -2), type logical),
+			LM2 = Table.AddColumn(LM1, "Is in Month -1", each IsInRelativeMonth([Date], -1), type logical),
+			LM3 = Table.AddColumn(LM2, "Is in This Month", each IsInRelativeMonth([Date], 0), type logical),
+			LM4 = Table.AddColumn(LM3, "Is in Month +1", each IsInRelativeMonth([Date], 1), type logical),
+			LM5 = Table.AddColumn(LM4, "Is in Month +2", each IsInRelativeMonth([Date], 2), type logical),
 
-			LQ1 = Table.AddColumn(LM5, "Is in Quarter -2", each Date.IsInPreviousNQuarters([Date], 2) and not Date.IsInPreviousNQuarters([Date], 1), type logical),
-			LQ2 = Table.AddColumn(LQ1, "Is in Quarter -1", each Date.IsInPreviousQuarter([Date]), type logical),
-			LQ3 = Table.AddColumn(LQ2, "Is in This Quarter", each Date.IsInCurrentQuarter([Date]), type logical),
-			LQ4 = Table.AddColumn(LQ3, "Is in Quarter +1", each Date.IsInNextQuarter([Date]), type logical),
-			LQ5 = Table.AddColumn(LQ4, "Is in Quarter +2", each Date.IsInNextNQuarters([Date], 2) and not Date.IsInNextNQuarters([Date], 1), type logical),
+			LQ1 = Table.AddColumn(LM5, "Is in Quarter -2", each IsInRelativeQuarter([Date], -2), type logical),
+			LQ2 = Table.AddColumn(LQ1, "Is in Quarter -1", each IsInRelativeQuarter([Date], -1), type logical),
+			LQ3 = Table.AddColumn(LQ2, "Is in This Quarter", each IsInRelativeQuarter([Date], 0), type logical),
+			LQ4 = Table.AddColumn(LQ3, "Is in Quarter +1", each IsInRelativeQuarter([Date], 1), type logical),
+			LQ5 = Table.AddColumn(LQ4, "Is in Quarter +2", each IsInRelativeQuarter([Date], 2), type logical),
 
-			LY1 = Table.AddColumn(LQ5, "Is in Year -2", each Date.IsInPreviousNYears([Date], 2) and not Date.IsInPreviousNYears([Date], 1), type logical),
-			LY2 = Table.AddColumn(LY1, "Is in Year -1", each Date.IsInPreviousYear([Date]), type logical),
-			LY3 = Table.AddColumn(LY2, "Is in This Year", each Date.IsInCurrentYear([Date]), type logical),
-			LY4 = Table.AddColumn(LY3, "Is in Year +1", each Date.IsInNextYear([Date]), type logical),
-			LY5 = Table.AddColumn(LY4, "Is in Year +2", each Date.IsInNextNYears([Date], 2) and not Date.IsInNextNYears([Date], 1), type logical),
+			LY1 = Table.AddColumn(LQ5, "Is in Year -2", each IsInRelativeYear([Date], -2), type logical),
+			LY2 = Table.AddColumn(LY1, "Is in Year -1", each IsInRelativeYear([Date], -1), type logical),
+			LY3 = Table.AddColumn(LY2, "Is in This Year", each IsInRelativeYear([Date], 0), type logical),
+			LY4 = Table.AddColumn(LY3, "Is in Year +1", each IsInRelativeYear([Date], 1), type logical),
+			LY5 = Table.AddColumn(LY4, "Is in Year +2", each IsInRelativeYear([Date], 2), type logical),
 			LYx = LY5,
 
 			LH1 = Table.AddColumn(LYx, "Is Leap Year", each Date.IsLeapYear([Date]), type logical),
@@ -367,21 +373,21 @@ let Calendar =
 			LKx = if UseWebSources then GB_NIR3 else LK0,
 
 			// Binary rolling //
-			RW1 = Table.AddColumn(LKx, "Is in Rolling Week -1", each Date.IsInPreviousNDays([Date], 7 * 2) and not Date.IsInPreviousNDays([Date], 7), type logical),
-			RW2 = Table.AddColumn(RW1, "Is in Rolling Week", each Date.IsInPreviousNDays([Date], 7), type logical),
-			RW3 = Table.AddColumn(RW2, "Is in Rolling Week +1", each Date.IsInNextNDays([Date], 7 * 2) and not Date.IsInNextNDays([Date], 7), type logical),
+			RW1 = Table.AddColumn(LKx, "Is in Rolling Week -1", each IsInPreviousNDays([Date], 7 * 2) and not IsInPreviousNDays([Date], 7), type logical),
+			RW2 = Table.AddColumn(RW1, "Is in Rolling Week", each IsInPreviousNDays([Date], 7), type logical),
+			RW3 = Table.AddColumn(RW2, "Is in Rolling Week +1", each IsInNextNDays([Date], 7 * 2) and not IsInNextNDays([Date], 7), type logical),
 
-			RM1 = Table.AddColumn(RW3, "Is in Rolling Month -1", each Date.IsInPreviousNDays([Date], RollMonth * 2) and not Date.IsInPreviousNDays([Date], RollMonth), type logical),
-			RM2 = Table.AddColumn(RM1, "Is in Rolling Month", each Date.IsInPreviousNDays([Date], RollMonth), type logical),
-			RM3 = Table.AddColumn(RM2, "Is in Rolling Month +1", each Date.IsInNextNDays([Date], RollMonth * 2) and not Date.IsInNextNDays([Date], RollMonth), type logical),
+			RM1 = Table.AddColumn(RW3, "Is in Rolling Month -1", each IsInPreviousNDays([Date], RollMonth * 2) and not IsInPreviousNDays([Date], RollMonth), type logical),
+			RM2 = Table.AddColumn(RM1, "Is in Rolling Month", each IsInPreviousNDays([Date], RollMonth), type logical),
+			RM3 = Table.AddColumn(RM2, "Is in Rolling Month +1", each IsInNextNDays([Date], RollMonth * 2) and not IsInNextNDays([Date], RollMonth), type logical),
 
-			RQ1 = Table.AddColumn(RM3, "Is in Rolling Quarter -1", each Date.IsInPreviousNDays([Date], RollQuarter * 2) and not Date.IsInPreviousNDays([Date], RollQuarter), type logical),
-			RQ2 = Table.AddColumn(RQ1, "Is in Rolling Quarter", each Date.IsInPreviousNDays([Date], RollQuarter), type logical),
-			RQ3 = Table.AddColumn(RQ2, "Is in Rolling Quarter +1", each Date.IsInNextNDays([Date], RollQuarter * 2) and not Date.IsInNextNDays([Date], RollQuarter), type logical),
+			RQ1 = Table.AddColumn(RM3, "Is in Rolling Quarter -1", each IsInPreviousNDays([Date], RollQuarter * 2) and not IsInPreviousNDays([Date], RollQuarter), type logical),
+			RQ2 = Table.AddColumn(RQ1, "Is in Rolling Quarter", each IsInPreviousNDays([Date], RollQuarter), type logical),
+			RQ3 = Table.AddColumn(RQ2, "Is in Rolling Quarter +1", each IsInNextNDays([Date], RollQuarter * 2) and not IsInNextNDays([Date], RollQuarter), type logical),
 
-			RY1 = Table.AddColumn(RQ3, "Is in Rolling Year -1", each Date.IsInPreviousNDays([Date], RollYear * 2) and not Date.IsInPreviousNDays([Date], RollYear), type logical),
-			RY2 = Table.AddColumn(RY1, "Is in Rolling Year", each Date.IsInPreviousNDays([Date], RollYear), type logical),
-			RY3 = Table.AddColumn(RY2, "Is in Rolling Year+1", each Date.IsInNextNDays([Date], RollYear * 2) and not Date.IsInNextNDays([Date], RollYear), type logical),
+			RY1 = Table.AddColumn(RQ3, "Is in Rolling Year -1", each IsInPreviousNDays([Date], RollYear * 2) and not IsInPreviousNDays([Date], RollYear), type logical),
+			RY2 = Table.AddColumn(RY1, "Is in Rolling Year", each IsInPreviousNDays([Date], RollYear), type logical),
+			RY3 = Table.AddColumn(RY2, "Is in Rolling Year+1", each IsInNextNDays([Date], RollYear * 2) and not IsInNextNDays([Date], RollYear), type logical),
 			RYx = RY3,
 
 			Out = Table.Sort(RYx, {{"Date", Order.Descending}})
