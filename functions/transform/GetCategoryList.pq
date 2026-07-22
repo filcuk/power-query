@@ -4,7 +4,8 @@
 |-[ author ]----------------------------------------------|
 |  2026, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
-|  2026-02-28  1.1.0  Add option to include blanks for bi-direcational relationships
+|  2026-07-22  1.2.0  Trim split tokens
+|  2026-02-28  1.1.0  Add option to include blanks for bi-directional relationships
 |  2026-02-28  1.0.0  Initial
 \*/
 
@@ -23,7 +24,7 @@ let GetCategoryList =
 			Distinct1 = List.Distinct(Source),
 			Table = Table.FromList(Distinct1, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
 			Filter = Table.SelectRows(Table, each ([Column1] <> null) or IncludeBlanks),
-			AddCategory = Table.AddColumn(Filter, Name, each try Text.Split([Column1], Delimiter) otherwise {null}),
+			AddCategory = Table.AddColumn(Filter, Name, each try List.Transform(Text.Split([Column1], Delimiter), Text.Trim) otherwise {null}),
 			RemoveList = Table.RemoveColumns(AddCategory,{"Column1"}),
 			ExpandCategory = Table.ExpandListColumn(RemoveList, Name),
 			Type = Table.TransformColumnTypes(ExpandCategory,{{Name, type text}}),
