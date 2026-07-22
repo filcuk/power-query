@@ -358,20 +358,20 @@ let Calendar =
 
 			LH1 = Table.AddColumn(LYx, "Is Leap Year", each Date.IsLeapYear([Date]), type logical),
 			LH2 = Table.AddColumn(LH1, "Is Leap Day", each Date.IsLeapYear([Date]) and (Date.Month([Date]) = 2) and (Date.Day([Date]) = 29), type logical),
-			LH3 = Table.AddColumn(LH2, "Is Weekday", each Date.DayOfWeek([Date], FirstWeekDay) <= 4, type logical),
-			LH4 = Table.AddColumn(LH3, "Is Weekend", each Date.DayOfWeek([Date], FirstWeekDay) >= 5, type logical),
+			LH3 = Table.AddColumn(LH2, "Is Weekday", each Date.DayOfWeek([Date], Day.Monday) <= 4, type logical),
+			LH4 = Table.AddColumn(LH3, "Is Weekend", each Date.DayOfWeek([Date], Day.Monday) >= 5, type logical),
 			LHx = LH4,
 
 			LK0 = LHx,
 			GB_EAW1 = Table.AddColumn(LK0, "Is Holiday (GB-EAW)", each [Holidays][GB_EAW] <> null, type logical),
 			GB_EAW2 = Table.AddColumn(GB_EAW1, "Holiday (GB-EAW)", each [Holidays][GB_EAW]?, type text),
-			GB_EAW3 = Table.AddColumn(GB_EAW2, "Is Workday (GB-EAW)", each ([Holidays][GB_EAW] = null) and (Date.DayOfWeek([Date], FirstWeekDay) <= 4), type logical),
+			GB_EAW3 = Table.AddColumn(GB_EAW2, "Is Workday (GB-EAW)", each ([Holidays][GB_EAW] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
 			GB_SCT1 = Table.AddColumn(GB_EAW3, "Is Holiday (GB-SCT)", each [Holidays][GB_SCT] <> null, type logical),
 			GB_SCT2 = Table.AddColumn(GB_SCT1, "Holiday (GB-SCT)", each [Holidays][GB_SCT]?, type text),
-			GB_SCT3 = Table.AddColumn(GB_SCT2, "Is Workday (GB-SCT)", each ([Holidays][GB_SCT] = null) and (Date.DayOfWeek([Date], FirstWeekDay) <= 4), type logical),
+			GB_SCT3 = Table.AddColumn(GB_SCT2, "Is Workday (GB-SCT)", each ([Holidays][GB_SCT] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
 			GB_NIR1 = Table.AddColumn(GB_SCT3, "Is Holiday (GB-NIR)", each [Holidays][GB_NIR] <> null, type logical),
 			GB_NIR2 = Table.AddColumn(GB_NIR1, "Holiday (GB-NIR)", each [Holidays][GB_NIR]?, type text),
-			GB_NIR3 = Table.AddColumn(GB_NIR2, "Is Workday (GB-NIR)", each ([Holidays][GB_NIR] = null) and (Date.DayOfWeek([Date], FirstWeekDay) <= 4), type logical),
+			GB_NIR3 = Table.AddColumn(GB_NIR2, "Is Workday (GB-NIR)", each ([Holidays][GB_NIR] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
 			LKx = if UseWebSources then GB_NIR3 else LK0,
 
 			// Binary rolling //
