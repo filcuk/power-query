@@ -1,27 +1,19 @@
-/*********************************************************\
-| DYNAMIC COLUMN TYPES
-|
-|=--purpose----------------------------------------------=|
-| Return ingested table with automatically detected
-| column types.
-| 
-|=--notes------------------------------------------------=|
-| Limited to hard-coded types, currently
-| datetime, date, number and text (fallback: any).
-| Sample size and error margin are optional parameters.
-| 
-|=--credits----------------------------------------------=|
-| Original: https://community.powerbi.com/t5/Community-Blog/Dynamically-Detect-Column-Types-with-Power-M/ba-p/1682639
-| 2021, Steve de Peijper, linkedin.com/in/stevedep/
-| 2023, Filip Kraus, contact@filipkraus.net
-|
-|=--changelog--------------------------------------------=|
-|   2026-07-22
-|       Replace Expression.Evaluate/#shared with native converters
-|       Expose optional SampleSize and MarginForError
-|       Prefer date when datetime values are all midnight
-|       Fix all-null / no-match columns crashing
-\*********************************************************/
+/*/ DetectColumnTypes \***********************************\
+|  Return ingested table with automatically detected      |
+|  column types.                                          |
+|-[ usage ]-----------------------------------------------|
+|  Limited to hard-coded types: datetime, date, number    |
+|  and text (fallback: any). Sample size and error margin |
+|  are optional parameters.                               |
+|-[ author ]----------------------------------------------|
+|  2021, Steve de Peijper, linkedin.com/in/stevedep/      |
+|  2023, Filip Kraus, contact@filipkraus.net              |
+|-[ changelog ]-------------------------------------------|
+|  2026-07-22  2.0.0  Replace Expression.Evaluate/#shared with native converters
+|                     Expose optional SampleSize and MarginForError
+|                     Prefer date when datetime values are all midnight
+|                     Fix all-null / no-match columns crashing
+\*/
 
 let DetectColumnTypes =
 	let Function = (
