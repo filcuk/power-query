@@ -1,19 +1,12 @@
-/*********************************************************\
-| CLEAN HEADERS
-|
-|=--purpose----------------------------------------------=|
-| Use Text.Clean() to clean table headers.
-| 
-|=--credits----------------------------------------------=|
-| Original 2023 by Filip Kraus, contact@filipkraus.net
-|
-|=--changelog--------------------------------------------=|
-| 	2026-07-22
-| 		Promote cleaned header row back to headers
-| 		Add documentation
-| 	2023-07-26
-| 		Initial
-\*********************************************************/
+/*/ CleanHeaders \****************************************\
+|  Use Text.Clean() to clean table headers.               |
+|-[ author ]----------------------------------------------|
+|  2023, Filip Kraus, contact@filipkraus.net              |
+|-[ changelog ]-------------------------------------------|
+|  2026-07-22  1.1.0  Promote cleaned header row back to headers
+|                     Add documentation
+|  2023-07-26  1.0.0  Initial
+\*/
 
 let CleanHeaders =
 	let Function = (
