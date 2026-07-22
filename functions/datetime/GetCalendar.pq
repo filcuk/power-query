@@ -6,7 +6,7 @@
 |  \_____|/_/   \_|_____||_____||_| \_||____//_/   \_|_| \_\
 | 
 |-[ usage ]-----------------------------------------------|
-|  Colum reference tags                                   |
+|  Column reference tags                                  |
 |    Abbr: Abbreviated form (Mon)                         |
 |    Comp: Composite number (202501)                      |
 |    Padd: Number padded with leading zeros (01)          |
@@ -33,7 +33,7 @@
 |                     Improve compatibility of [Day & Ordinal] (thanks Asma)
 |                     Fix issue with [Week Side] for first/last week of year
 |  2025-03-28  3.0.0  Change column names to be more user-friendly
-|                     Add option to explicitely define current date
+|                     Add option to explicitly define current date
 |                     Add sort by date
 |                     Add [Day & Ordinal], [Year & Quarter]
 |                     Add holiday fields & text for all GB regions
@@ -158,7 +158,7 @@ let Calendar =
 			W9 = Table.AddColumn(W8, "Year & Week & Day of Year", each Text.From(Date.Year([Date])) & "-W" & Text.PadStart(Text.From(Date.WeekOfYear([Date], FirstWeekDay)), 2, "0") & "-" & Text.PadStart(Text.From(Date.DayOfYear([Date])), 3, "0"), type text),	// 2022-W01-001
 			Wx = W9,
 
-			// Weeks are lengtend (>3 days) or shortenned (<4 days) to fit fully into calendar months
+			// Weeks are lengthened (>3 days) or shortened (<4 days) to fit fully into calendar months
 			V1 = Table.AddColumn(Wx, "Week Constrained", each
 				if Date.StartOfWeek([Date], FirstWeekDay) < Date.StartOfMonth([Date])
 					then if Duration.Days(Date.StartOfMonth([Date]) - Date.StartOfWeek([Date], FirstWeekDay)) < 4
@@ -293,7 +293,7 @@ let Calendar =
 			T9 = Table.AddColumn(T8, "Relative Years", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), 365.25), 0), Int64.Type),
 			Tx = T9,
 
-			// Ralative comparative counts //
+			// Relative comparative counts //
 			U1 = Table.AddColumn(Tx, "Relative Day of Week", each let d = Date.DayOfWeek([Date], FirstWeekDay) - Date.DayOfWeek(Today, FirstWeekDay) in d + (if d < 0 then 7 else 0), Int64.Type),
 			U2 = Table.AddColumn(U1, "Relative Day of Year", each Date.DayOfYear([Date]) - Date.DayOfYear(Today), Int64.Type),
 			U3 = Table.AddColumn(U2, "Relative Week of Year", each Date.WeekOfYear([Date], FirstWeekDay) - Date.WeekOfYear(Today, FirstWeekDay), Int64.Type),
@@ -436,7 +436,7 @@ let Calendar =
 				Documentation.SampleValues = {true}
 			]),
 			optional CurrentDate as (type date meta [
-				Documentation.FieldCaption = "Curent Date",
+				Documentation.FieldCaption = "Current Date",
 				Documentation.FieldDescription = "Allows explicit definition of current date",
 				Documentation.SampleValues = {Date.From(DateTimeZone.UtcNow())}
 			])

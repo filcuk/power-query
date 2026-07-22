@@ -2,7 +2,7 @@
 | EMPTY TABLE GENERATOR
 |
 |=--purpose----------------------------------------------=|
-| Creates an empty table. Completely unecessary fn.
+| Creates an empty table. Completely unnecessary fn.
 | 
 |=--usage------------------------------------------------=|
 | Pass false, apply changes and create a placeholder
