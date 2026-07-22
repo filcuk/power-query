@@ -4,21 +4,25 @@
 |-[ author ]----------------------------------------------|
 |  2026, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
+|  2026-07-22  1.1.0  Optional section name
+|					  Safe Required meta access
 |  2026-02-19  1.0.0  Initial
 \*/
 
 let GetParameters =
 	let Function = (
-		DisplayLevel as text
+		DisplayLevel as text,
+		optional SectionName as nullable text
 	) as table =>
 
         let
-            Source = #sections[Section1],
+            SectionName = if SectionName = null then "Section1" else SectionName,
+            Source = Record.Field(#sections, SectionName),
             Table = Record.ToTable(Source),
             AddMeta = Table.AddColumn(Table, "Meta", each try Value.Metadata([Value]) otherwise null),
             FilterParameters = Table.SelectRows(AddMeta, each try [Meta][IsParameterQuery] otherwise false),
             AddDescription = Table.AddColumn(FilterParameters, "Description", each try [Meta][Documentation.Description] otherwise null, type text),
-            AddRequired = Table.AddColumn(AddDescription, "Required", each if [Meta][IsParameterQueryRequired] then "Yes" else "No", type text),
+            AddRequired = Table.AddColumn(AddDescription, "Required", each if (try [Meta][IsParameterQueryRequired] otherwise false) then "Yes" else "No", type text),
             AddOptions = Table.AddColumn(AddRequired, "Options", each try Text.Combine([Meta][List], ", ") otherwise null, type text),
             ExpandMeta = Table.ExpandRecordColumn(AddOptions, "Meta", {"Type", "DisplayLevel", "DefaultValue"}, {"Type", "Display Level", "Default"}),
             Type = Table.TransformColumnTypes(ExpandMeta,{{"Type", type text}, {"Display Level", type text}, {"Value", type text}, {"Default", type text}}),
@@ -39,6 +43,11 @@ let GetParameters =
 				Documentation.FieldDescription = "Acting as a filter, it defines which parameters are output",
                 Documentation.AllowedValues = {"Report", "User", "Support", "Developer"},
 				Documentation.SampleValues = {"Support"}
+			]),
+			optional SectionName as (type text meta [
+				Documentation.FieldCaption = "Section name",
+				Documentation.FieldDescription = "Query section to read from. Defaults to Section1",
+				Documentation.SampleValues = {"Section1"}
 			])
 			) as any meta [
 				Documentation.Name = "Get Parameters",
