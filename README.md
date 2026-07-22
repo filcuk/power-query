@@ -7,9 +7,11 @@ Use description headings with changelogs:
 |-[ usage ]-----------------------------------------------|
 |  Information about the table and it's parameters.       |
 |-[ author ]----------------------------------------------|
+|  2020, Original Author, contact@email.com               |
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
 |  2024-08-16  2.0.0  Major rework
+|                     Each change is on it's own line
 |  2024-08-09  1.1.1  Fix typo
 |  2024-05-23  1.1.0  Add more examples
 |  2024-04-03  1.0.0  Initial
