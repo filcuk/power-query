@@ -1,20 +1,14 @@
-/*********************************************************\
-| EMPTY TABLE GENERATOR
-|
-|=--purpose----------------------------------------------=|
-| Creates an empty table. Completely unnecessary fn.
-| 
-|=--usage------------------------------------------------=|
-| Pass false, apply changes and create a placeholder
-| measure: `placeholder3 = 0`. Change param to true.
-| 
-|=--credits----------------------------------------------=|
-| Original 2023 by Filip Kraus, contact@filipkraus.net
-|
-|=--changelog--------------------------------------------=|
-| 	2026-07-22
-| 		Add documentation
-\*********************************************************/
+/*/ GetEmptyTable \***************************************\
+|  Creates an empty table. Very useful.                   |
+|-[ usage ]-----------------------------------------------|
+|  Pass false, apply changes and create a placeholder     |
+|  measure: `placeholder3 = 0`. Change param to true.     |
+|-[ author ]----------------------------------------------|
+|  2023, Filip Kraus, contact@filipkraus.net              |
+|-[ changelog ]-------------------------------------------|
+|  2026-07-22  1.0.1  Add documentation
+|  2023-06-06  1.0.0  Initial
+\*/
 
 let GetEmptyTable =
 	let Function = (Final as logical) as table =>
