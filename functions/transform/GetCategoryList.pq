@@ -5,6 +5,7 @@
 |  2026, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
 |  2026-07-22  1.2.0  Trim split tokens
+|					  Drop empty parts unless IncludeBlanks
 |  2026-02-28  1.1.0  Add option to include blanks for bi-directional relationships
 |  2026-02-28  1.0.0  Initial
 \*/
@@ -27,7 +28,8 @@ let GetCategoryList =
 			AddCategory = Table.AddColumn(Filter, Name, each try List.Transform(Text.Split([Column1], Delimiter), Text.Trim) otherwise {null}),
 			RemoveList = Table.RemoveColumns(AddCategory,{"Column1"}),
 			ExpandCategory = Table.ExpandListColumn(RemoveList, Name),
-			Type = Table.TransformColumnTypes(ExpandCategory,{{Name, type text}}),
+			FilterItems = Table.SelectRows(ExpandCategory, each let v = Record.Field(_, Name) in (v <> null and v <> "") or IncludeBlanks),
+			Type = Table.TransformColumnTypes(FilterItems,{{Name, type text}}),
 			Distinct2 = Table.Distinct(Type),
 			Sort = Table.Sort(Distinct2,{{Name, Order.Ascending}})
 		in
