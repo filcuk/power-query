@@ -17,7 +17,8 @@
 | 2023, Filip Kraus, contact@filipkraus.net
 |
 |=--changelog--------------------------------------------=|
-| 
+|   2026-07-22
+|       Fix all-null / no-match columns crashing
 \*********************************************************/
 
 (tbl as table) as table  =>
@@ -30,11 +31,13 @@ let
                     LC(LS(
                         LT(L, each try  " & _ & "(_) otherwise ""Error""), each _ = ""Error""))", Env)),
         CheckWithinMargin = List.Transform(NumberOfErrors, each _ <= numberofrecords * marginforerror),
-        typenr = List.PositionOf(CheckWithinMargin, true),  
-
-        FirstTypeWithinMargin =  {"datetime", "date", "number", "text"}{typenr},
-        CheckType = if List.Distinct(LijstmetValues){0} = null or FirstTypeWithinMargin = -1 then 4  else FirstTypeWithinMargin,
-        result = Record.Field([number = type number,date = type date,datetime = type datetime,text = type text, any = type any],CheckType)
+        typenr = List.PositionOf(CheckWithinMargin, true),
+        TypeNames = {"datetime", "date", "number", "text"},
+        CheckType =
+            if List.IsEmpty(LijstmetValues) or List.IsEmpty(List.RemoveNulls(LijstmetValues)) or typenr = -1
+            then "any"
+            else TypeNames{typenr},
+        result = Record.Field([number = type number, date = type date, datetime = type datetime, text = type text, any = type any], CheckType)
     in result,
     Columnsto2Type = Table.TransformColumnTypes(tbl, List.Transform(Table.ColumnNames(tbl), each {_,  fn(tbl,_, 7, 0.1)}))    
 in
