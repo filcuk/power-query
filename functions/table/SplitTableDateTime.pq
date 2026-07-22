@@ -3,7 +3,11 @@
 |  Applied to a table, splits select date/time columns
 |  to individual date & time columns.
 |  
-|-[ Version: 1.0.0 (2026-03-27)
+|-[ Version: 1.0.1 (2026-07-22)
+|-[ Changelog:
+|  1.0.1  Validate column names
+|		  Null-safe Date/Time conversion
+|  1.0.0  Initial (2026-03-27)
 |-[ Usage:
 |  Refer to the built-in function documentation.
 |  
@@ -24,24 +28,29 @@ let SplitTableDateTime =
 			DateSuffix = if DateSuffix = null then "_Date" else DateSuffix,
 			TimeSuffix = if TimeSuffix = null then "_Time" else TimeSuffix,
 
+			Missing = List.RemoveItems(Columns, Table.ColumnNames(Table)),
+			Validated =
+				if List.IsEmpty(Missing) then Table
+				else error Error.Record("Expression.Error", "Column(s) not found: " & Text.Combine(List.Transform(Missing, Text.From), ", ")),
+
 			SplitColumns =
 				List.Accumulate(
 					Columns,
-					Table,
+					Validated,
 					(state, colName) =>
 						let
 							DateCol = Table.AddColumn(
 								state,
 								colName & DateSuffix,
-								each Date.From(Record.Field(_, colName)),
-								type date
+								each try Date.From(Record.Field(_, colName)) otherwise null,
+								type nullable date
 							),
 
 							TimeCol = Table.AddColumn(
 								DateCol,
 								colName & TimeSuffix,
-								each Time.From(Record.Field(_, colName)),
-								type time
+								each try Time.From(Record.Field(_, colName)) otherwise null,
+								type nullable time
 							),
 
 							Cleaned =
