@@ -1,13 +1,13 @@
 /*/ TrimAll \*********************************************\
-| Trim whitespace around *and* in between text.           |
+|  Trim whitespace around *and* in between text.          |
 |-[ author ]----------------------------------------------|
-| 2023, Rick De Groot,  gorilla.bi                        |
-| 2024, Filip Kraus,    contact@filipkraus.net            |
+|  2023, Rick De Groot, gorilla.bi                        |
+|  2024, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
-| 2026-07-22  1.1.0   Rename function
+|  2026-07-22  1.1.0  Rename function
 |                     Return text
 |                     Split on space/tab/CR/LF/NBSP
-| 2024-04-04  1.0.0   Initial
+|  2024-04-04  1.0.0  Initial
 \*/
 
 let
