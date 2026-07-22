@@ -1,4 +1,4 @@
-/*/ GetRefresh \******************************************\
+/*/ GetRefreshTable \*************************************\
 |  Generate a table with refresh and client information.  |
 |-[ author ]----------------------------------------------|
 |  2023, Filip Kraus, contact@filipkraus.net              |
