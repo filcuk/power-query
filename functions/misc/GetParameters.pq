@@ -5,7 +5,7 @@
 |  2026, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
 |  2026-07-22  1.1.0  Optional section name
-|					  Safe Required meta access
+|                     Safe Required meta access
 |  2026-02-19  1.0.0  Initial
 \*/
 
