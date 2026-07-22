@@ -1,4 +1,4 @@
-/*/ GET DATAFLOW \****************************************\
+/*/ GetDataflow \*****************************************\
 |  Retrieve dataflow objects in a single call.            |
 |-[ usage ]-----------------------------------------------|
 |  Does not support environment dataflow storage.         |
