@@ -1,16 +1,14 @@
-/*************************************************************\
-|=[ SPLIT TABLE DATE/TIME
-|  Applied to a table, splits select date/time columns
-|  to individual date & time columns.
-|  
-|-[ Version: 1.0.1 (2026-07-22)
-|-[ Changelog:
-|  1.0.1  Validate column names
-|		  Null-safe Date/Time conversion
-|  1.0.0  Initial (2026-03-27)
-|-[ Usage:
-|  Refer to the built-in function documentation.
-|  
+/*/ SplitTableDateTime \**********************************\
+|  Applied to a table, splits select date/time columns    |
+|  to individual date & time columns.                     |
+|-[ usage ]-----------------------------------------------|
+|  Refer to the built-in function documentation.          |
+|-[ author ]----------------------------------------------|
+|  2026, Filip Kraus, contact@filipkraus.net              |
+|-[ changelog ]-------------------------------------------|
+|  2026-07-22  1.0.1  Validate column names
+|                     Null-safe Date/Time conversion
+|  2026-03-27  1.0.0  Initial
 \*/
 
 let SplitTableDateTime =
