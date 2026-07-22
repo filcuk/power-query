@@ -20,6 +20,7 @@
 |					  Fix incorrect holiday regions
 |					  Fix relative dates not respecting custom `Today`
 |					  Fix [Week Constrained] missing `FirstWeekDay`
+|					  Fix [Week Constrained *] using wrong type
 |  2026-03-25  3.2.0  Change [Week Side] to lower case
 |  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
@@ -162,8 +163,8 @@ let Calendar =
 					then if Duration.Days(Date.EndOfWeek([Date], FirstWeekDay) - Date.EndOfMonth([Date])) < 4
 						then Date.WeekOfYear([Date], FirstWeekDay) else Date.WeekOfYear(Date.AddWeeks([Date], -1), FirstWeekDay)
 				else Date.WeekOfYear([Date], FirstWeekDay), Int64.Type),
-			V2 = Table.AddColumn(V1, "Week Constrained (Padd)", each Text.PadStart(Text.From([Week Constrained]), 2, "0"), Int64.Type),
-			V3 = Table.AddColumn(V2, "Week Constrained (Prfx)", each "W" & [#"Week Constrained (Padd)"], Int64.Type),
+			V2 = Table.AddColumn(V1, "Week Constrained (Padd)", each Text.PadStart(Text.From([Week Constrained]), 2, "0"), type text),
+			V3 = Table.AddColumn(V2, "Week Constrained (Prfx)", each "W" & [#"Week Constrained (Padd)"], type text),
 			V4 = Table.AddColumn(V3, "Week Side", each (
 				if (Date.Month([Week Start Date]) <> Date.Month([Date]) and Date.Year([Week Start Date]) = Date.Year([Date]))  then "b"
 				else if (Date.Month(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) <> Date.Month([Date]) and Date.Year(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) = Date.Year([Date])) then "a"
