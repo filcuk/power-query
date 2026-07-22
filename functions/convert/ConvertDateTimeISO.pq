@@ -1,23 +1,17 @@
-/*********************************************************\
-| CONVERT TIME VALUE TO TIME TYPE
-|
-|=--notes----------------------------------------------=|
-| Interprets a numeric HHmmss / Hmmss value as time.
-| Input:  133050, 33050, 935
-| Output: 13:30:50, 03:30:50, 00:09:35
-| (Not an ISO datetime converter — name kept for compatibility.)
-|
-|=--credits----------------------------------------------=|
-| Original 2023 by Filip Kraus, contact@filipkraus.net
-|
-|=--changelog--------------------------------------------=|
-| 	2026-07-22
-| 		Pad to 6 digits; parse HH:mm:ss; validate ranges
-| 		Add documentation
-| 	2023-06-13
-| 		Initial
-| 
-\*********************************************************/
+/*/ ConvertDateTimeISO \**********************************\
+|  Interprets a numeric HHmmss / Hmmss value as time.     |
+|-[ usage ]-----------------------------------------------|
+|  Input:  133050, 33050, 935                             |
+|  Output: 13:30:50, 03:30:50, 00:09:35                   |
+|  Not an ISO datetime converter — name kept for          |
+|  compatibility.                                         |
+|-[ author ]----------------------------------------------|
+|  2023, Filip Kraus, contact@filipkraus.net              |
+|-[ changelog ]-------------------------------------------|
+|  2026-07-22  1.1.0  Pad to 6 digits; parse HH:mm:ss; validate ranges
+|                     Add documentation
+|  2023-06-13  1.0.0  Initial
+\*/
 
 let ConvertDateTimeISO =
 	let Function = (DateTime as number) as time =>
