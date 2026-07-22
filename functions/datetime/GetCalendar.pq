@@ -21,6 +21,8 @@
 |					  Fix relative dates not respecting custom `Today`
 |					  Fix [Week Constrained] missing `FirstWeekDay`
 |					  Fix [Week Constrained *] using wrong type
+|					  Fix [Is Weekday/end] shifting with `FirstWeekDay`
+|					  Fix holidays to be null-safe
 |  2026-03-25  3.2.0  Change [Week Side] to lower case
 |  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
@@ -363,15 +365,15 @@ let Calendar =
 			LHx = LH4,
 
 			LK0 = LHx,
-			GB_EAW1 = Table.AddColumn(LK0, "Is Holiday (GB-EAW)", each [Holidays][GB_EAW] <> null, type logical),
-			GB_EAW2 = Table.AddColumn(GB_EAW1, "Holiday (GB-EAW)", each [Holidays][GB_EAW]?, type text),
-			GB_EAW3 = Table.AddColumn(GB_EAW2, "Is Workday (GB-EAW)", each ([Holidays][GB_EAW] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
-			GB_SCT1 = Table.AddColumn(GB_EAW3, "Is Holiday (GB-SCT)", each [Holidays][GB_SCT] <> null, type logical),
-			GB_SCT2 = Table.AddColumn(GB_SCT1, "Holiday (GB-SCT)", each [Holidays][GB_SCT]?, type text),
-			GB_SCT3 = Table.AddColumn(GB_SCT2, "Is Workday (GB-SCT)", each ([Holidays][GB_SCT] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
-			GB_NIR1 = Table.AddColumn(GB_SCT3, "Is Holiday (GB-NIR)", each [Holidays][GB_NIR] <> null, type logical),
-			GB_NIR2 = Table.AddColumn(GB_NIR1, "Holiday (GB-NIR)", each [Holidays][GB_NIR]?, type text),
-			GB_NIR3 = Table.AddColumn(GB_NIR2, "Is Workday (GB-NIR)", each ([Holidays][GB_NIR] = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
+			GB_EAW1 = Table.AddColumn(LK0, "Is Holiday (GB-EAW)", each [Holidays]?[GB_EAW]? <> null, type logical),
+			GB_EAW2 = Table.AddColumn(GB_EAW1, "Holiday (GB-EAW)", each [Holidays]?[GB_EAW]?, type text),
+			GB_EAW3 = Table.AddColumn(GB_EAW2, "Is Workday (GB-EAW)", each ([Holidays]?[GB_EAW]? = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
+			GB_SCT1 = Table.AddColumn(GB_EAW3, "Is Holiday (GB-SCT)", each [Holidays]?[GB_SCT]? <> null, type logical),
+			GB_SCT2 = Table.AddColumn(GB_SCT1, "Holiday (GB-SCT)", each [Holidays]?[GB_SCT]?, type text),
+			GB_SCT3 = Table.AddColumn(GB_SCT2, "Is Workday (GB-SCT)", each ([Holidays]?[GB_SCT]? = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
+			GB_NIR1 = Table.AddColumn(GB_SCT3, "Is Holiday (GB-NIR)", each [Holidays]?[GB_NIR]? <> null, type logical),
+			GB_NIR2 = Table.AddColumn(GB_NIR1, "Holiday (GB-NIR)", each [Holidays]?[GB_NIR]?, type text),
+			GB_NIR3 = Table.AddColumn(GB_NIR2, "Is Workday (GB-NIR)", each ([Holidays]?[GB_NIR]? = null) and (Date.DayOfWeek([Date], Day.Monday) <= 4), type logical),
 			LKx = if UseWebSources then GB_NIR3 else LK0,
 
 			// Binary rolling //
