@@ -287,9 +287,9 @@ let Calendar =
 			T5 = Table.AddColumn(T4, "Relative Calendar Years", each Date.Year([Date]) - Date.Year(Today), Int64.Type),
 			// Relative rolling counts //
 			T6 = Table.AddColumn(T5, "Relative Weeks", each Number.IntegerDivide(Number.From(Date.StartOfWeek([Date], FirstWeekDay)) - Number.From(Date.StartOfWeek(Today, FirstWeekDay)), 7), Int64.Type),
-			T7 = Table.AddColumn(T6, "Relative Months", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/12), 0), Int64.Type),
-			T8 = Table.AddColumn(T7, "Relative Quarters", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/4), 0), Int64.Type),
-			T9 = Table.AddColumn(T8, "Relative Years", each Number.RoundUp(Value.Divide(Duration.TotalDays([Date] - Today), 365.25), 0), Int64.Type),
+			T7 = Table.AddColumn(T6, "Relative Months", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/12), 0), Int64.Type),
+			T8 = Table.AddColumn(T7, "Relative Quarters", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), (31+28.25+31+30+31+30+31+31+30+31+30+31)/4), 0), Int64.Type),
+			T9 = Table.AddColumn(T8, "Relative Years", each Number.Round(Value.Divide(Duration.TotalDays([Date] - Today), 365.25), 0), Int64.Type),
 			Tx = T9,
 
 			// Ralative comparative counts //
