@@ -1,12 +1,14 @@
-/*/ TZ CONVERTER \****************************************\
-| Time zone converter with DST support                     |
+/*/ ConvertDateTimeZone \*********************************\
+|  Time zone converter with DST support.                  |
 |-[ author ]----------------------------------------------|
-| 2022, Damian (comments), blog.crossjoin.co.uk           |
-| 2023, Filip Kraus,       contact@filipkraus.net         |
+|  2022, Damian (comments), blog.crossjoin.co.uk          |
+|  2023, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
-|  2023-05-31   1.0.0   Initial
-|  2023-06-29   1.1.0   Add CET/CEST
-|                       Add static DST TZ conversions 
+|  2026-07-22  1.2.0  Raise errors instead of returning error record
+|                     Use IsCEST for CET offset
+|  2023-06-29  1.1.0  Add CET/CEST
+|                     Add static DST TZ conversions
+|  2023-05-31  1.0.0  Initial
 \*/
 
 let
@@ -32,15 +34,15 @@ let
     UTCtoBST = InputDateTime + #duration(0,1,0,0),
     BSTtoUTC = InputDateTime - #duration(0,1,0,0),
 
-    UTCtoCET = InputDateTime + (if IsBST then #duration(0,2,0,0) else #duration(0,1,0,0)),
-    CETtoUTC = InputDateTime - (if IsBST then #duration(0,2,0,0) else #duration(0,1,0,0)),
+    UTCtoCET = InputDateTime + (if IsCEST then #duration(0,2,0,0) else #duration(0,1,0,0)),
+    CETtoUTC = InputDateTime - (if IsCEST then #duration(0,2,0,0) else #duration(0,1,0,0)),
     UTCtoCEST = InputDateTime + #duration(0,2,0,0),
     CESTtoUTC = InputDateTime - #duration(0,2,0,0),
 
     Output =
-        if InputTimeZone = TargetTimeZone then Error.Record("Same input and target time zone.")
+        if InputTimeZone = TargetTimeZone then error Error.Record("Expression.Error", "Same input and target time zone.")
         // else if (List.Contains({ "BST", "CEST" }, InputTimeZone) or List.Contains({ "BST", "CEST" }, TargetTimeZone)) and AutoDST = false
-        //     then Error.Record("DST time zones require 'Auto DST' to be enabled.")
+        //     then error Error.Record("Expression.Error", "DST time zones require 'Auto DST' to be enabled.")
         
         // UTC - GMT/BST
         else if InputTimeZone = "UTC" and TargetTimeZone = "GMT" then [DateTime=UTCtoGMT, DST=IsBST]
@@ -50,11 +52,11 @@ let
         
         // UTC - CET/CEST
         else if InputTimeZone = "UTC" and TargetTimeZone = "CET" then [DateTime=UTCtoCET, DST=IsCEST]
-        else if InputTimeZone = "CET" and TargetTimeZone = "UTC" then [DateTime=CETtoUTC, DST=IsBST]
+        else if InputTimeZone = "CET" and TargetTimeZone = "UTC" then [DateTime=CETtoUTC, DST=IsCEST]
         else if InputTimeZone = "UTC" and TargetTimeZone = "CEST" then [DateTime=UTCtoCEST, DST=true]
         else if InputTimeZone = "CEST" and TargetTimeZone = "UTC" then [DateTime=CESTtoUTC, DST=true]
         
-        else Error.Record("Unsupported time zone.")
+        else error Error.Record("Expression.Error", "Unsupported time zone.")
 
 in
     Output,
