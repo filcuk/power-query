@@ -4,7 +4,8 @@
 |-[ author ]----------------------------------------------|
 |  2026, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
-|  2026-02-28  1.1.0  Add option to include blanks for bi-direcational relationships
+|  2026-07-22  1.2.0  Align IncludeBlanks default to false
+|  2026-02-28  1.1.0  Add option to include blanks for bi-directional relationships
 |  2026-02-28  1.0.0  Initial
 \*/
 
@@ -19,7 +20,7 @@ let GetCategoryListWithKey =
 
         let
             Source = Table,
-            IncludeBlanks = if IncludeBlanks <> null then IncludeBlanks else true,
+            IncludeBlanks = if IncludeBlanks <> null then IncludeBlanks else false,
 			
 			Columns = Table.SelectColumns(Source,{KeyColumn, ItemColumn}),
             RenameTemp = Table.RenameColumns(Columns,{{ItemColumn, "Temp"}}),
@@ -54,7 +55,7 @@ let GetCategoryListWithKey =
 				Documentation.FieldCaption = "Include blanks",
 				Documentation.FieldDescription = "Should the output include empty categories",
 				Documentation.AllowedValues = {true, false},
-				Documentation.SampleValues = {true}
+				Documentation.SampleValues = {false}
 			])
 			) as any meta [
 				Documentation.Name = "Get Category List with Key",
