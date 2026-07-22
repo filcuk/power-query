@@ -1,11 +1,11 @@
-/*/ Get Category List with Key \**************************\
+/*/ GetCategoryListWithKey \******************************\
 |  Converts a concatenated category column                |
 |  to a distinct list.                                    |
 |-[ author ]----------------------------------------------|
 |  2026, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
 |  2026-07-22  1.2.0  Align IncludeBlanks default to false
-|					  Trim split tokens
+|                     Trim split tokens
 |  2026-02-28  1.1.0  Add option to include blanks for bi-directional relationships
 |  2026-02-28  1.0.0  Initial
 \*/
