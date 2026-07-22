@@ -6,6 +6,7 @@
 | 2024, Filip Kraus,    contact@filipkraus.net            |
 |-[ changelog ]-------------------------------------------|
 | 2026-07-22  1.1.0   Rename function
+|                     Return text
 | 2024-04-04  1.0.0   Initial
 \*/
 
@@ -14,6 +15,7 @@ let
     TrimAll =
         let
             Function = (Input as text) as any =>
+            Function = (Input as text) as text =>
                 let
                     Trim = Text.Trim(Input),
 					Split = Text.Split(Trim, " "),
@@ -29,6 +31,7 @@ let
 					Formatting.IsCode = false
 				])
 				) as any
+                ) as text
                 meta [
                     Documentation.Name = "TrimFull",
                     Documentation.LongDescription = "Trim spaces around and in between text.",
@@ -42,3 +45,4 @@ let
             TypedFunction
 in
     TrimFull    TrimAll
+    TrimAll
