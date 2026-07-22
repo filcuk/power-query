@@ -15,6 +15,7 @@
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |  2014, Matt Masson, mattmasson.com                      |
 |-[ changelog ]-------------------------------------------|
+|  2026-03-25  3.2.0  Fix 445B using the wrong function
 |  2026-03-25  3.2.0  Change [Week Side] to lower case
 |  2026-02-02  3.1.2  Fix [Is WTD] returning values based on local device culture
 |  2025-11-10  3.1.1  Fix [Is in Week*], [Relative Weeks], [Relative Day of Week] returning incorrect values
@@ -264,7 +265,7 @@ let Calendar =
 				Result = List.First(List.Select(Periods, each _{0}(WeekNo))){1}
 			in 
 				Result,
-			PB1 = Table.ExpandRecordColumn(Table.AddColumn(PAx, "Calendar445B", each Calendar445([ISO Week]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445B", {"P", "Q"}, {"P445B", "P445B Quarter"}),
+			PB1 = Table.ExpandRecordColumn(Table.AddColumn(PAx, "Calendar445B", each Calendar445B([ISO Week]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445B", {"P", "Q"}, {"P445B", "P445B Quarter"}),
 			PB2 = Table.AddColumn(PB1, "P445B (Padd)", each Text.PadStart(Text.From([P445B]), 2, "0"), type text),
 			PB3 = Table.AddColumn(PB2, "P445B (Prfx)", each "Period B " & Text.PadStart(Text.From([P445B]), 2, "0"), type text),
 			PB4 = Table.AddColumn(PB3, "P445B Quarter (Prfx)", each "Period B Q" & Text.From([P445B Quarter]), type text),
