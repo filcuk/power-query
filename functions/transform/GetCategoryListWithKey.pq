@@ -5,6 +5,7 @@
 |  2026, Filip Kraus, contact@filipkraus.net              |
 |-[ changelog ]-------------------------------------------|
 |  2026-07-22  1.2.0  Align IncludeBlanks default to false
+|					  Trim split tokens
 |  2026-02-28  1.1.0  Add option to include blanks for bi-directional relationships
 |  2026-02-28  1.0.0  Initial
 \*/
@@ -25,10 +26,11 @@ let GetCategoryListWithKey =
 			Columns = Table.SelectColumns(Source,{KeyColumn, ItemColumn}),
             RenameTemp = Table.RenameColumns(Columns,{{ItemColumn, "Temp"}}),
             Filter = Table.SelectRows(RenameTemp, each ([Temp] <> null) or IncludeBlanks),
-			AddList = Table.AddColumn(Filter, ItemColumn, each try Text.Split([Temp], Delimiter) otherwise {null}),
+			AddList = Table.AddColumn(Filter, ItemColumn, each try List.Transform(Text.Split([Temp], Delimiter), Text.Trim) otherwise {null}),
             RemoveTemp = Table.RemoveColumns(AddList,{"Temp"}),
             ExpandCategory = Table.ExpandListColumn(RemoveTemp, ItemColumn),
-            Type = Table.TransformColumnTypes(ExpandCategory,{{ItemColumn, type text}}),
+            FilterItems = Table.SelectRows(ExpandCategory, each let v = Record.Field(_, ItemColumn) in (v <> null and v <> "") or IncludeBlanks),
+            Type = Table.TransformColumnTypes(FilterItems,{{ItemColumn, type text}}),
             Distinct = Table.Distinct(Type),
             Sort = Table.Sort(Distinct,{{KeyColumn, Order.Descending}})
         in
