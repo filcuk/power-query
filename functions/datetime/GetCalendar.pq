@@ -15,6 +15,7 @@
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |  2014, Matt Masson, mattmasson.com                      |
 |-[ changelog ]-------------------------------------------|
+|  2026-08-13  3.2.1  Fix [Week Side] on weeks that end on a month boundary
 |  2026-03-25  3.2.0  Fix 445B using the wrong function
 |                     Fix [Is Leap Day] missing day number
 |                     Fix incorrect holiday regions
@@ -170,8 +171,9 @@ let Calendar =
 			V2 = Table.AddColumn(V1, "Week Constrained (Padd)", each Text.PadStart(Text.From([Week Constrained]), 2, "0"), type text),
 			V3 = Table.AddColumn(V2, "Week Constrained (Prfx)", each "W" & [#"Week Constrained (Padd)"], type text),
 			V4 = Table.AddColumn(V3, "Week Side", each (
-				if (Date.Month([Week Start Date]) <> Date.Month([Date]) and Date.Year([Week Start Date]) = Date.Year([Date]))  then "b"
-				else if (Date.Month(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) <> Date.Month([Date]) and Date.Year(Date.AddDays([Date], 7 - Date.DayOfWeek(Date.AddDays([Date], -7), FirstWeekDay))) = Date.Year([Date])) then "a"
+				if Date.Month([Week Start Date]) <> Date.Month([Week End Date])
+					and Date.Year([Week Start Date]) = Date.Year([Week End Date])
+				then if Date.Month([Date]) = Date.Month([Week Start Date]) then "a" else "b"
 				else null), type text),
 			V5 = Table.AddColumn(V4, "Week & Side (Prfx)", each [#"Week (Prfx)"] & (if [Week Side] = null then "" else [Week Side]), type text),
 			Vx = V5,
