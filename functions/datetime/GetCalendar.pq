@@ -15,6 +15,10 @@
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |  2014, Matt Masson, mattmasson.com                      |
 |-[ changelog ]-------------------------------------------|
+|  2026-10-22  3.3.0  Add a configurable period calendar (PeriodPattern, PeriodWeek53)
+|                     Add [Period Week], [Period Week of Month], [Period Year] and period start/end dates
+|                     Change the period calendar to respect FirstWeekDay
+|                     Remove [P445*] and [P445B*], replaced by [Period *]
 |  2026-08-13  3.2.1  Fix [Week Side] on weeks that end on a month boundary
 |  2026-03-25  3.2.0  Fix 445B using the wrong function
 |                     Fix [Is Leap Day] missing day number
@@ -229,58 +233,150 @@ let Calendar =
 			I8 = Table.AddColumn(I7, "ISO Year & Week", each Text.From([ISO Year]) & "-W" & Text.PadStart(Text.From([ISO Week]), 2, "0"), type text), // 2022-W00
 			IHx = Table.RemoveColumns(I8, {"CurrentThu", "YearCurThu", "FirstYrThu"}),
 
-			// Calendar 4-4-5 //
-			Calendar445 = (WeekNo) => let 
-				Periods = 
-					{ 
-						{(x)=>x< 5, [P=1, Q=1]},
-						{(x)=>x< 9, [P=2, Q=1]},
-						{(x)=>x<14, [P=3, Q=1]},
-						{(x)=>x<18, [P=4, Q=2]},
-						{(x)=>x<22, [P=5, Q=2]},
-						{(x)=>x<27, [P=6, Q=2]},
-						{(x)=>x<31, [P=7, Q=3]},
-						{(x)=>x<35, [P=8, Q=3]},
-						{(x)=>x<40, [P=9, Q=3]},
-						{(x)=>x<44, [P=10,Q=4]},
-						{(x)=>x<48, [P=11,Q=4]},
-						{(x)=>true, [P=12,Q=4]}
-					},
-				Result = List.First(List.Select(Periods, each _{0}(WeekNo))){1}
-			in 
-				Result,
-			PA1 = Table.ExpandRecordColumn(Table.AddColumn(IHx, "Calendar445", each Calendar445([ISO Week]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445", {"P", "Q"}, {"P445", "P445 Quarter"}),
-			PA2 = Table.AddColumn(PA1, "P445 (Padd)", each Text.PadStart(Text.From([P445]), 2, "0"), type text),
-			PA3 = Table.AddColumn(PA2, "P445 (Prfx)", each "Period " & Text.PadStart(Text.From([P445]), 2, "0"), type text),
-			PA4 = Table.AddColumn(PA3, "P445 Quarter (Prfx)", each "Period Q" & Text.From([P445 Quarter]), type text),
-			PAx = PA4,
+			// Period calendar //
+			// Weeks per period, grouped by quarter. The outer list repeats until it fills 52 weeks.
+			//   {{4,4,5}}                               4-4-5
+			//   {{4,5,4}}                               4-5-4
+			//   {{4,4,5},{4,4,5},{4,5,4},{4,5,4}}       mixed / full-year definition
+			PeriodPattern = {{4,4,5}},
+			PeriodWeek53 = null,   // period number that absorbs week 53; null = last period
 
-			// Calendar 4-4-5 x 4-5-4 //
-			// Periods: 4-4-5, 4-4-5, 4-5-4, 4-5-4
-			Calendar445B = (WeekNo) => let 
-				Periods = 
-					{ 
-						{(x)=>x< 5, [P=1, Q=1]}, 
-						{(x)=>x< 9, [P=2, Q=1]}, 
-						{(x)=>x<14, [P=3, Q=1]}, 
-						{(x)=>x<18, [P=4, Q=2]}, 
-						{(x)=>x<22, [P=5, Q=2]}, 
-						{(x)=>x<27, [P=6, Q=2]}, 
-						{(x)=>x<31, [P=7, Q=3]}, 
-						{(x)=>x<36, [P=8, Q=3]}, 
-						{(x)=>x<40, [P=9, Q=3]}, 
-						{(x)=>x<44, [P=10,Q=4]}, 
-						{(x)=>x<49, [P=11,Q=4]}, 
-						{(x)=>true, [P=12,Q=4]} 
-					}, 
-				Result = List.First(List.Select(Periods, each _{0}(WeekNo))){1}
-			in 
-				Result,
-			PB1 = Table.ExpandRecordColumn(Table.AddColumn(PAx, "Calendar445B", each Calendar445B([ISO Week]), type [P = Int64.Type, Q = Int64.Type]), "Calendar445B", {"P", "Q"}, {"P445B", "P445B Quarter"}),
-			PB2 = Table.AddColumn(PB1, "P445B (Padd)", each Text.PadStart(Text.From([P445B]), 2, "0"), type text),
-			PB3 = Table.AddColumn(PB2, "P445B (Prfx)", each "Period B " & Text.PadStart(Text.From([P445B]), 2, "0"), type text),
-			PB4 = Table.AddColumn(PB3, "P445B Quarter (Prfx)", each "Period B Q" & Text.From([P445B Quarter]), type text),
-			Px = PB4,
+			PeriodPatternIsLists = Value.Is(PeriodPattern, type list) and List.Count(PeriodPattern) > 0 and List.MatchesAll(PeriodPattern, each Value.Is(_, type list) and List.Count(_) > 0),
+			PeriodPatternFlat = if PeriodPatternIsLists then List.Combine(PeriodPattern) else {},
+			PeriodPatternValuesOk = PeriodPatternIsLists and List.MatchesAll(PeriodPatternFlat, each Value.Is(_, type number) and _ > 0 and _ = Number.RoundDown(_, 0)),
+			PeriodPatternTotal = if PeriodPatternValuesOk then List.Sum(PeriodPatternFlat) else 0,
+			PeriodPatternSpansYear = PeriodPatternValuesOk and PeriodPatternTotal > 0 and Number.Mod(52, PeriodPatternTotal) = 0,
+			PeriodCount = if PeriodPatternSpansYear then Number.IntegerDivide(52, PeriodPatternTotal) * List.Count(PeriodPatternFlat) else 0,
+			PeriodWeek53Ok = PeriodWeek53 = null or (PeriodPatternSpansYear and Value.Is(PeriodWeek53, type number) and PeriodWeek53 >= 1 and PeriodWeek53 <= PeriodCount and PeriodWeek53 = Number.RoundDown(PeriodWeek53, 0)),
+			PeriodCheck =
+				if not PeriodPatternIsLists then error Error.Record("Expression.Error", "Period pattern must be a list of non-empty quarter lists", [Pattern = PeriodPattern])
+				else if not PeriodPatternValuesOk then error Error.Record("Expression.Error", "Period pattern values must be positive whole numbers of weeks", [Pattern = PeriodPattern])
+				else if not PeriodPatternSpansYear then error Error.Record("Expression.Error", "Period pattern must total 52 weeks (or a divisor of 52)", [Pattern = PeriodPattern, Total = PeriodPatternTotal])
+				else if not PeriodWeek53Ok then error Error.Record("Expression.Error", "PeriodWeek53 must be null or a period number from 1 to " & Text.From(PeriodCount), [PeriodWeek53 = PeriodWeek53, PeriodCount = PeriodCount])
+				else true,
+
+			PeriodRepeated = List.Repeat(PeriodPattern, Number.IntegerDivide(52, PeriodPatternTotal)),
+			PeriodWeeks52 = List.Combine(PeriodRepeated),
+			PeriodQuarters52 = List.Combine(List.Transform({0..(List.Count(PeriodRepeated) - 1)}, (i) => List.Repeat({i + 1}, List.Count(PeriodRepeated{i})))),
+			PeriodWeek53At = if PeriodWeek53 = null then List.Count(PeriodWeeks52) else PeriodWeek53,
+			PeriodWeeks53 = List.Transform({0..(List.Count(PeriodWeeks52) - 1)}, (i) => PeriodWeeks52{i} + (if i + 1 = PeriodWeek53At then 1 else 0)),
+
+			PeriodBuildWeekMap = (weekCounts as list, quarters as list) as list =>
+				let
+					n = List.Count(weekCounts),
+					PeriodStarts = List.FirstN(List.Accumulate(weekCounts, {1}, (state, w) => state & {List.Last(state) + w}), n),
+					Periods = List.Accumulate(
+						{0..(n - 1)},
+						{},
+						(state, i) =>
+							let
+								q = quarters{i},
+								prev = if List.IsEmpty(state) then null else List.Last(state),
+								qStart = if prev = null or prev[Quarter] <> q then PeriodStarts{i} else prev[QuarterStartWk]
+							in
+								state & {[
+									Month = i + 1,
+									Quarter = q,
+									MonthStartWk = PeriodStarts{i},
+									MonthWks = weekCounts{i},
+									QuarterStartWk = qStart
+								]}
+					),
+					WithQuarterWks = List.Transform(
+						Periods,
+						(p) => Record.AddField(
+							p,
+							"QuarterWks",
+							List.Sum(List.Transform(List.Select(Periods, each [Quarter] = p[Quarter] and [QuarterStartWk] = p[QuarterStartWk]), each [MonthWks]))
+						)
+					),
+					Map = List.Combine(List.Transform(WithQuarterWks, (p) =>
+						List.Transform({1..p[MonthWks]}, (w) => [
+							Month = p[Month],
+							Quarter = p[Quarter],
+							WeekOfMonth = w,
+							MonthStartWk = p[MonthStartWk],
+							MonthWks = p[MonthWks],
+							QuarterStartWk = p[QuarterStartWk],
+							QuarterWks = p[QuarterWks]
+						])
+					))
+				in
+					Map,
+
+			// Built once, before any calendar rows. An invalid pattern errors here.
+			PeriodWeekMap52 = if PeriodCheck then PeriodBuildWeekMap(PeriodWeeks52, PeriodQuarters52) else {},
+			PeriodWeekMap53 = if PeriodCheck then PeriodBuildWeekMap(PeriodWeeks53, PeriodQuarters52) else {},
+			P0 = if PeriodCheck and List.Count(PeriodWeekMap52) = 52 and List.Count(PeriodWeekMap53) = 53 then IHx else error Error.Record("Expression.Error", "Period week map did not cover the year", [Weeks52 = List.Count(PeriodWeekMap52), Weeks53 = List.Count(PeriodWeekMap53)]),
+
+			PeriodYearStart = (y as number) as date => Date.StartOfWeek(#date(y, 1, 4), FirstWeekDay),
+			PeriodInfo = (d as date) as record =>
+				let
+					WkStart = Date.StartOfWeek(d, FirstWeekDay),
+					PY = Date.Year(Date.AddDays(WkStart, 3)),
+					YS = PeriodYearStart(PY),
+					YE = Date.AddDays(PeriodYearStart(PY + 1), -1),
+					Wk = Number.IntegerDivide(Duration.Days(WkStart - YS), 7) + 1,
+					YearDays = Duration.Days(YE - YS) + 1,
+					Map = if YearDays = 371 then PeriodWeekMap53 else if YearDays = 364 then PeriodWeekMap52 else error Error.Record("Expression.Error", "Period year is not 52 or 53 weeks", [Year = PY, Days = YearDays]),
+					R = Map{Wk - 1},
+					MonthPadd = Text.PadStart(Text.From(R[Month]), 2, "0"),
+					WeekPadd = Text.PadStart(Text.From(Wk), 2, "0")
+				in [
+					Year = Int64.From(PY),
+					YearStart = YS,
+					YearEnd = YE,
+					Quarter = Int64.From(R[Quarter]),
+					QuarterPrfx = "PQ" & Text.From(R[Quarter]),
+					QuarterStart = Date.AddDays(YS, (R[QuarterStartWk] - 1) * 7),
+					QuarterEnd = Date.AddDays(YS, (R[QuarterStartWk] - 1 + R[QuarterWks]) * 7 - 1),
+					Month = Int64.From(R[Month]),
+					MonthPadd = MonthPadd,
+					MonthPrfx = "P" & MonthPadd,
+					MonthStart = Date.AddDays(YS, (R[MonthStartWk] - 1) * 7),
+					MonthEnd = Date.AddDays(YS, (R[MonthStartWk] - 1 + R[MonthWks]) * 7 - 1),
+					Week = Int64.From(Wk),
+					WeekPadd = WeekPadd,
+					WeekPrfx = "PW" & WeekPadd,
+					WeekOfMonth = Int64.From(R[WeekOfMonth]),
+					YearQuarterComp = Int64.From(PY * 100 + R[Quarter]),
+					YearQuarter = Text.From(PY) & "-PQ" & Text.From(R[Quarter]),
+					YearMonthComp = Int64.From(PY * 100 + R[Month]),
+					YearMonth = Text.From(PY) & "-P" & MonthPadd,
+					YearWeekComp = Int64.From(PY * 100 + Wk),
+					YearWeek = Text.From(PY) & "-PW" & WeekPadd
+				],
+			PeriodType = type [
+				Year = Int64.Type,
+				YearStart = date,
+				YearEnd = date,
+				Quarter = Int64.Type,
+				QuarterPrfx = text,
+				QuarterStart = date,
+				QuarterEnd = date,
+				Month = Int64.Type,
+				MonthPadd = text,
+				MonthPrfx = text,
+				MonthStart = date,
+				MonthEnd = date,
+				Week = Int64.Type,
+				WeekPadd = text,
+				WeekPrfx = text,
+				WeekOfMonth = Int64.Type,
+				YearQuarterComp = Int64.Type,
+				YearQuarter = text,
+				YearMonthComp = Int64.Type,
+				YearMonth = text,
+				YearWeekComp = Int64.Type,
+				YearWeek = text
+			],
+			P1 = Table.ExpandRecordColumn(
+				Table.AddColumn(P0, "Period", each PeriodInfo([Date]), PeriodType),
+				"Period",
+				{"Year", "YearStart", "YearEnd", "Quarter", "QuarterPrfx", "QuarterStart", "QuarterEnd", "Month", "MonthPadd", "MonthPrfx", "MonthStart", "MonthEnd", "Week", "WeekPadd", "WeekPrfx", "WeekOfMonth", "YearQuarterComp", "YearQuarter", "YearMonthComp", "YearMonth", "YearWeekComp", "YearWeek"},
+				{"Period Year", "Period Year Start Date", "Period Year End Date", "Period Quarter", "Period Quarter (Prfx)", "Period Quarter Start Date", "Period Quarter End Date", "Period Month", "Period Month (Padd)", "Period Month (Prfx)", "Period Month Start Date", "Period Month End Date", "Period Week", "Period Week (Padd)", "Period Week (Prfx)", "Period Week of Month", "Period Year & Quarter (Comp)", "Period Year & Quarter", "Period Year & Month (Comp)", "Period Year & Month", "Period Year & Week (Comp)", "Period Year & Week"}
+			),
+			Px = P1,
 
 			// Relative calendar counts //
 			T1 = Table.AddColumn(Px, "Relative Days", each Duration.TotalDays([Date] - Today), Int64.Type),
