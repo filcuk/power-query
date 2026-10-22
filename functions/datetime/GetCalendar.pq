@@ -15,7 +15,8 @@
 |  2023, Filip Kraus, contact@filipkraus.net              |
 |  2014, Matt Masson, mattmasson.com                      |
 |-[ changelog ]-------------------------------------------|
-|  2026-10-22  3.3.0  Add a configurable period calendar (PeriodPattern, PeriodWeek53)
+|  2026-10-22  4.0.0-pre.1 
+|					  Add a configurable period calendar (PeriodPattern, PeriodWeek53)
 |                     Add [Period Week], [Period Week of Month], [Period Year] and period start/end dates
 |                     Change the period calendar to respect FirstWeekDay
 |                     Remove [P445*] and [P445B*], replaced by [Period *]
@@ -309,43 +310,61 @@ let Calendar =
 			PeriodWeekMap53 = if PeriodCheck then PeriodBuildWeekMap(PeriodWeeks53, PeriodQuarters52) else {},
 			P0 = if PeriodCheck and List.Count(PeriodWeekMap52) = 52 and List.Count(PeriodWeekMap53) = 53 then IHx else error Error.Record("Expression.Error", "Period week map did not cover the year", [Weeks52 = List.Count(PeriodWeekMap52), Weeks53 = List.Count(PeriodWeekMap53)]),
 
-			PeriodYearStart = (y as number) as date => Date.StartOfWeek(#date(y, 1, 4), FirstWeekDay),
-			PeriodInfo = (d as date) as record =>
-				let
-					WkStart = Date.StartOfWeek(d, FirstWeekDay),
-					PY = Date.Year(Date.AddDays(WkStart, 3)),
-					YS = PeriodYearStart(PY),
-					YE = Date.AddDays(PeriodYearStart(PY + 1), -1),
-					Wk = Number.IntegerDivide(Duration.Days(WkStart - YS), 7) + 1,
-					YearDays = Duration.Days(YE - YS) + 1,
-					Map = if YearDays = 371 then PeriodWeekMap53 else if YearDays = 364 then PeriodWeekMap52 else error Error.Record("Expression.Error", "Period year is not 52 or 53 weeks", [Year = PY, Days = YearDays]),
-					R = Map{Wk - 1},
-					MonthPadd = Text.PadStart(Text.From(R[Month]), 2, "0"),
-					WeekPadd = Text.PadStart(Text.From(Wk), 2, "0")
-				in [
-					Year = Int64.From(PY),
-					YearStart = YS,
-					YearEnd = YE,
-					Quarter = Int64.From(R[Quarter]),
-					QuarterPrfx = "PQ" & Text.From(R[Quarter]),
-					QuarterStart = Date.AddDays(YS, (R[QuarterStartWk] - 1) * 7),
-					QuarterEnd = Date.AddDays(YS, (R[QuarterStartWk] - 1 + R[QuarterWks]) * 7 - 1),
-					Month = Int64.From(R[Month]),
-					MonthPadd = MonthPadd,
-					MonthPrfx = "P" & MonthPadd,
-					MonthStart = Date.AddDays(YS, (R[MonthStartWk] - 1) * 7),
-					MonthEnd = Date.AddDays(YS, (R[MonthStartWk] - 1 + R[MonthWks]) * 7 - 1),
-					Week = Int64.From(Wk),
-					WeekPadd = WeekPadd,
-					WeekPrfx = "PW" & WeekPadd,
-					WeekOfMonth = Int64.From(R[WeekOfMonth]),
-					YearQuarterComp = Int64.From(PY * 100 + R[Quarter]),
-					YearQuarter = Text.From(PY) & "-PQ" & Text.From(R[Quarter]),
-					YearMonthComp = Int64.From(PY * 100 + R[Month]),
-					YearMonth = Text.From(PY) & "-P" & MonthPadd,
-					YearWeekComp = Int64.From(PY * 100 + Wk),
-					YearWeek = Text.From(PY) & "-PW" & WeekPadd
-				],
+// Define the start date of a given Period Year based on FinYearStartMo
+            PeriodYearStart = (y as number) as date => 
+                let
+                    NominalDate = #date(y, FinYearStartMo, 1),
+                    StartWk = Date.StartOfWeek(NominalDate, FirstWeekDay)
+                in
+                    StartWk,
+
+            PeriodInfo = (d as date) as record =>
+                let
+                    WkStart = Date.StartOfWeek(d, FirstWeekDay),
+                    
+                    // Determine the correct Period Year (PY) based on whether the date is before or after FinYearStartMo
+                    CalendarYear = Date.Year(WkStart),
+                    TempYS = PeriodYearStart(CalendarYear),
+                    PY = if WkStart < TempYS then CalendarYear - 1 else CalendarYear,
+                    
+                    YS = PeriodYearStart(PY),
+                    YE = Date.AddDays(PeriodYearStart(PY + 1), -1),
+                    Wk = Number.IntegerDivide(Duration.Days(WkStart - YS), 7) + 1,
+                    YearDays = Duration.Days(YE - YS) + 1,
+                    
+                    // Corrected reference to PeriodWeekMap52
+                    Map = if YearDays = 371 then PeriodWeekMap53 else if YearDays = 364 then PeriodWeekMap52 else error Error.Record("Expression.Error", "Period year is not 52 or 53 weeks", [Year = PY, Days = YearDays]),
+                    
+                    // Safety check to ensure week index is within bounds
+                    SafeWk = if Wk < 1 then 1 else if Wk > List.Count(Map) then List.Count(Map) else Wk,
+                    R = Map{SafeWk - 1},
+                    
+                    MonthPadd = Text.PadStart(Text.From(R[Month]), 2, "0"),
+                    WeekPadd = Text.PadStart(Text.From(Wk), 2, "0")
+                in [
+                    Year = Int64.From(PY),
+                    YearStart = YS,
+                    YearEnd = YE,
+                    Quarter = Int64.From(R[Quarter]),
+                    QuarterPrfx = "PQ" & Text.From(R[Quarter]),
+                    QuarterStart = Date.AddDays(YS, (R[QuarterStartWk] - 1) * 7),
+                    QuarterEnd = Date.AddDays(YS, (R[QuarterStartWk] - 1 + R[QuarterWks]) * 7 - 1),
+                    Month = Int64.From(R[Month]),
+                    MonthPadd = MonthPadd,
+                    MonthPrfx = "P" & MonthPadd,
+                    MonthStart = Date.AddDays(YS, (R[MonthStartWk] - 1) * 7),
+                    MonthEnd = Date.AddDays(YS, (R[MonthStartWk] - 1 + R[MonthWks]) * 7 - 1),
+                    Week = Int64.From(Wk),
+                    WeekPadd = WeekPadd,
+                    WeekPrfx = "PW" & WeekPadd,
+                    WeekOfMonth = Int64.From(R[WeekOfMonth]),
+                    YearQuarterComp = Int64.From(PY * 100 + R[Quarter]),
+                    YearQuarter = Text.From(PY) & "-PQ" & Text.From(R[Quarter]),
+                    YearMonthComp = Int64.From(PY * 100 + R[Month]),
+                    YearMonth = Text.From(PY) & "-P" & MonthPadd,
+                    YearWeekComp = Int64.From(PY * 100 + Wk),
+                    YearWeek = Text.From(PY) & "-PW" & WeekPadd
+                ],
 			PeriodType = type [
 				Year = Int64.Type,
 				YearStart = date,
